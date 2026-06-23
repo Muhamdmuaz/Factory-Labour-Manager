@@ -364,6 +364,7 @@
 
 <script>
 "use strict";
+const APP_VERSION="2026-06-23.2";
 
 /* ===== Storage: window.storage (Claude) -> localStorage (device) -> memory ===== */
 const Store = {
@@ -509,7 +510,8 @@ const ic={
   up:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
   down:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
   trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
-  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13M8 6l4-4 4 4"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7"/></svg>'
+  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13M8 6l4-4 4 4"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7"/></svg>',
+  refresh:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>'
 };
 
 /* ===== Dashboard ===== */
@@ -1030,6 +1032,10 @@ function settingsForm(){
     <div class="info-card">All your data is saved <b>only on this device</b>, inside this browser/app — nothing is uploaded to any server. Keep a backup so you never lose it, or to move it to another phone.</div>
     <div class="btn-row"><button class="btn btn-primary" data-action="export-data">Save backup</button><button class="btn btn-soft" data-action="import-data">Restore</button></div>
 
+    <div class="sub-h">App version &amp; updates</div>
+    <div class="info-card">You're on version <b>${APP_VERSION}</b>. Tap below to load the latest version. <b>Your saved data will NOT be deleted</b> — only the app is refreshed.</div>
+    <button class="btn btn-soft" data-action="update-app" style="margin-top:10px;">${ic.refresh} Update app to latest</button>
+
     <button class="btn btn-amber" data-action="save-settings" style="margin-top:20px;">Done</button>`;
 }
 function stageEditor(i){
@@ -1253,6 +1259,16 @@ async function tsubDel(m){ const p=settings.stages[editStageIdx].steps[editStepI
 async function tsubMove(m,d){ const p=settings.stages[editStageIdx].steps[editStepIdx]; const t=m+d; if(t<0||t>=p.subs.length)return; [p.subs[m],p.subs[t]]=[p.subs[t],p.subs[m]]; await saveSettingsStore(); tstepEditor(editStageIdx,editStepIdx); }
 
 async function saveSettings(){ const f=$("#s_factory").value.trim()||"My Factory"; settings.factory=f; $("#brandName").value=f; await saveSettingsStore(); closeSheet(); render(); toast("Settings saved"); }
+async function updateApp(){
+  const ok=await uiConfirm("Load the latest version now? Your saved data stays safe.","Update","Cancel");
+  if(!ok)return;
+  toast("Updating…");
+  // localStorage is per-site, so it survives. Cache-bust the URL to fetch the newest app.
+  try{
+    const base=location.origin+location.pathname;
+    setTimeout(()=>{ location.replace(base+"?u="+Date.now()); }, 350);
+  }catch(e){ location.reload(); }
+}
 
 /* backup */
 function exportData(){
@@ -1358,6 +1374,7 @@ document.addEventListener("click",e=>{
     case "tsub-down": tsubMove(m,1); break;
     case "save-settings": saveSettings(); break;
     case "home-help": homeHelp(); break;
+    case "update-app": updateApp(); break;
     case "export-data": exportData(); break;
     case "import-data": importData(); break;
   }

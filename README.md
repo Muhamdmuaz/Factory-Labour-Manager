@@ -15,14 +15,19 @@ quantity-wise, and record delivery to the client.
 - Backup / restore your data
 - Smart defaults that learn from your most-repeated process steps
 
-## 📱 Note
-This app is **currently designed for iPhone**. On iPhone, open the live link in Safari →
-**Share** → **Add to Home Screen** to use it like a normal app.
+## 📱 Works on iPhone and Android
+The app runs on **iPhone and other phones (Android) too**. Open the live link and add it
+to your home screen to use it like a normal app:
+
+- **iPhone (Safari):** Share button → **Add to Home Screen** → Add
+- **Android (Chrome):** menu **⋮** → **Add to Home screen** / **Install app**
+
+## 🔒 Your data is private and safe
+Whoever uses this app, **their data is saved only on their own phone** (inside that phone's
+browser). It is **not uploaded to any server** and no one else can see it. Each phone keeps
+its own data. Because of this, please use **Settings → Save backup** every now and then to
+keep a copy of your data (and to move it to another phone if needed).
 
 ## Suggestions or changes?
 If you'd like any change or new feature, please **open an Issue** in the
 [Issues](https://github.com/Muhamdmuaz/Factory-Labour-Manager/issues) tab.
-
-## Note on data
-Your data is saved **only on your own device** (in the browser). Use **Settings → Save backup**
-to keep a copy or move it to another phone.

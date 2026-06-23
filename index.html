@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Factory Floor" />
+<meta name="theme-color" content="#16191D" />
+<title>Factory Floor — Labour & Work Manager</title>
+<style>
+  :root{
+    --ink:#16191D; --ink-2:#2A2E35; --concrete:#F2F0EA; --card:#FFFFFF;
+    --line:#E3DFD5; --steel:#74797F; --steel-2:#9A9EA4;
+    --amber:#E8870E; --amber-soft:#FBEFD9;
+    --green:#1F9D57; --green-soft:#E1F3E8;
+    --red:#D24A36; --red-soft:#FBE7E2; --blue:#3A6EA5; --blue-soft:#E4ECF6;
+    --shadow:0 1px 2px rgba(22,25,29,.06), 0 8px 24px rgba(22,25,29,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--concrete);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,textarea,select{font-family:inherit;font-size:16px;}
+  .app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;background:var(--concrete);}
+
+  .topbar{position:sticky;top:0;z-index:30;background:var(--ink);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 14px 14px 18px;display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:34px;height:34px;border-radius:8px;flex:none;background:linear-gradient(135deg,var(--amber),#C46A05);display:grid;place-items:center;font-weight:800;font-size:18px;color:#16191D;}
+  .brand-name{font-weight:700;font-size:16px;letter-spacing:.2px;line-height:1.1;background:transparent;border:none;color:#fff;width:100%;padding:2px 0;}
+  .brand-name:focus{outline:none;}
+  .brand-sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--steel-2);}
+  .gear{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:none;}
+  .gear:active{background:rgba(255,255,255,.12);}
+
+  .view{flex:1;padding:18px 16px 110px;}
+  .view-title{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--steel);font-weight:700;margin:2px 2px 14px;}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:8px;}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+  .tile .num{font-size:30px;font-weight:800;line-height:1;letter-spacing:-1px;}
+  .tile .lbl{font-size:12px;color:var(--steel);margin-top:6px;letter-spacing:.3px;}
+  .tile.accent .num{color:var(--amber);}
+  .tile.good .num{color:var(--green);}
+  .avg-card{background:var(--ink);color:#fff;border-radius:var(--radius);padding:14px 16px;margin-top:12px;display:flex;align-items:center;gap:12px;}
+  .avg-card .big{font-size:26px;font-weight:800;letter-spacing:-1px;}
+  .avg-card .lbl{font-size:12px;color:var(--steel-2);line-height:1.3;}
+
+  .section-h{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 12px;}
+  .section-h h2{font-size:15px;margin:0;font-weight:700;}
+  .section-h .count{font-size:12px;color:var(--steel);}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .card.tap:active{transform:scale(.992);}
+  .job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .job-title{font-size:16px;font-weight:700;line-height:1.25;margin:0;}
+  .job-client{font-size:13px;color:var(--steel);margin-top:3px;display:flex;align-items:center;gap:5px;}
+
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap;flex:none;}
+  .b-active{background:var(--amber-soft);color:#9A5803;}
+  .b-completed{background:var(--blue-soft);color:#2C5481;}
+  .b-delivered{background:var(--green-soft);color:#176B3C;}
+  .b-overdue{background:var(--red-soft);color:#A6311F;}
+  .b-paused{background:#E7E3DA;color:#5A5F66;}
+  .pause-banner{display:flex;align-items:center;gap:10px;background:#EFEBE2;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:6px 0 14px;}
+  .pause-banner .pb-t{font-weight:700;font-size:13.5px;color:var(--ink-2);}
+  .pause-banner .pb-s{font-size:12px;color:var(--steel);margin-top:1px;}
+
+  .pbar-wrap{margin-top:13px;}
+  .pbar-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;}
+  .pbar-pct{font-size:13px;font-weight:800;flex:none;}
+  .pbar-cap{font-size:11.5px;color:var(--steel);letter-spacing:.2px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pbar{height:9px;border-radius:6px;background:#EDEAE2;overflow:hidden;}
+  .pbar > span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--amber),#C46A05);transition:width .35s ease;}
+  .pbar.is-done > span{background:linear-gradient(90deg,var(--green),#137C42);}
+
+  .job-foot{display:flex;align-items:center;gap:14px;margin-top:13px;flex-wrap:wrap;}
+  .chiplet{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2);}
+  .chiplet.warn{color:var(--red);font-weight:600;}
+  .avatar{width:22px;height:22px;border-radius:50%;background:var(--ink-2);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700;flex:none;}
+
+  /* leaderboard */
+  .lead{display:flex;align-items:center;gap:13px;}
+  .rank{width:26px;text-align:center;font-weight:800;font-size:15px;color:var(--steel-2);flex:none;}
+  .rank.r1{color:#C9931F;} .rank.r2{color:#9AA0A6;} .rank.r3{color:#B07A4A;}
+  .lead .av{width:42px;height:42px;border-radius:11px;flex:none;background:linear-gradient(135deg,#2A2E35,#454B54);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px;}
+  .lead .wname{font-weight:700;font-size:15px;}
+  .lead .wmeta{font-size:12px;color:var(--steel);margin-top:2px;}
+  .lead .right{margin-left:auto;text-align:right;flex:none;}
+  .lead .stepnum{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+  .lead .steplbl{font-size:10px;color:var(--steel);text-transform:uppercase;letter-spacing:.5px;}
+  .speed{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 8px;border-radius:6px;margin-top:6px;display:inline-block;}
+  .sp-fast{background:var(--green-soft);color:#176B3C;}
+  .sp-ok{background:var(--blue-soft);color:#2C5481;}
+  .sp-slow{background:var(--red-soft);color:#A6311F;}
+  .sp-none{background:#EDEAE2;color:var(--steel);}
+  .seg{display:flex;background:#E7E3DA;border-radius:11px;padding:4px;margin-bottom:16px;}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+  .team-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:0 0 14px;}
+  .team-summary .ts{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 10px;text-align:center;box-shadow:var(--shadow);}
+  .team-summary .ts .n{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+  .team-summary .ts .l{font-size:10.5px;color:var(--steel);margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+  .wd-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 8px;}
+  .wd-stats .wd{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .wd-stats .wd .n{font-size:24px;font-weight:800;letter-spacing:-.5px;}
+  .wd-stats .wd .l{font-size:11.5px;color:var(--steel);margin-top:3px;}
+  .wd-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-size:13.5px;}
+  .wd-row .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex:none;}
+  .wd-row .meta{margin-left:auto;font-size:12px;color:var(--steel);}
+  .chart-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
+  .chart-title{font-size:14px;font-weight:700;margin-bottom:14px;}
+  .chart-title .ct-sub{display:block;font-size:11.5px;font-weight:500;color:var(--steel);margin-top:2px;}
+  .chart-empty{font-size:13px;color:var(--steel-2);text-align:center;padding:18px 0;}
+  .chart-flex{display:flex;align-items:center;gap:18px;}
+  .donut{width:120px;height:120px;flex:none;}
+  .donut .d-top{font-size:22px;font-weight:800;fill:var(--ink);}
+  .donut .d-sub{font-size:8px;fill:var(--steel);text-transform:uppercase;letter-spacing:.5px;}
+  .legend-col{display:flex;flex-direction:column;gap:9px;flex:1;min-width:0;}
+  .lg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);}
+  .lg .lgdot{width:10px;height:10px;border-radius:3px;flex:none;}
+  .lg .lgl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lg b{font-weight:800;}
+  .bars{display:flex;flex-direction:column;gap:11px;}
+  .bar-row{display:flex;align-items:center;gap:10px;}
+  .bar-lbl{width:34%;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none;}
+  .bar-track{flex:1;height:11px;background:#EDEAE2;border-radius:6px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:6px;min-width:3px;transition:width .4s ease;}
+  .bar-val{width:24px;text-align:right;font-weight:800;font-size:13px;flex:none;}
+  .vbars{display:flex;align-items:stretch;gap:7px;height:150px;}
+  .vbar{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .vbar-val{font-size:11px;font-weight:800;color:var(--ink-2);height:14px;}
+  .vbar-col{flex:1;width:64%;background:#EDEAE2;border-radius:6px 6px 4px 4px;display:flex;align-items:flex-end;overflow:hidden;}
+  .vbar-fill{width:100%;background:linear-gradient(180deg,var(--amber),#C46A05);border-radius:6px 6px 0 0;transition:height .4s ease;}
+  .vbar-lbl{font-size:10.5px;color:var(--steel);}
+  .suggest{margin:4px 0 4px;}
+  .suggest-h{font-size:11.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;color:var(--steel);margin-bottom:8px;}
+  .suggest-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .sg-chip{background:var(--blue-soft);color:#2C5481;border-radius:999px;padding:8px 12px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;}
+  .sg-chip span{background:#fff;color:#2C5481;border-radius:6px;padding:1px 6px;font-size:11px;font-weight:800;}
+  .sg-chip:active{filter:brightness(.96);}
+  .toggle-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;cursor:pointer;}
+  .toggle-row .tg-t{font-weight:700;font-size:14.5px;}
+  .toggle-row .tg-s{font-size:12px;color:var(--steel);margin-top:3px;line-height:1.45;}
+  .switch{width:46px;height:28px;border-radius:999px;background:#D8D3C8;flex:none;position:relative;transition:background .2s;}
+  .switch span{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s;}
+  .switch.on{background:var(--green);}
+  .switch.on span{transform:translateX(18px);}
+  .qty-meta{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-top:10px;font-size:13px;color:var(--ink-2);}
+  .qty-meta b{font-size:16px;}
+  .qty-wip{color:#9A5803;font-weight:700;}
+  .qty-wait{color:var(--steel-2);}
+  .qty-ctrl{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .qbtn{min-width:44px;height:44px;border-radius:11px;background:#EFECE4;font-weight:800;font-size:20px;color:var(--ink);display:grid;place-items:center;}
+  .qbtn.wide{min-width:auto;padding:0 14px;font-size:14px;background:var(--amber-soft);color:#9A5803;}
+  .qbtn:active{filter:brightness(.95);}
+  .qbtn:disabled{opacity:.35;}
+  .qty-num{min-width:54px;text-align:center;font-size:22px;font-weight:800;letter-spacing:-.5px;}
+  .qty-pill{font-size:12px;font-weight:800;background:var(--amber-soft);color:#9A5803;border-radius:6px;padding:1px 7px;vertical-align:middle;}
+  .confirm-scrim{position:fixed;inset:0;background:rgba(22,25,29,.5);z-index:70;display:none;align-items:center;justify-content:center;padding:28px;}
+  .confirm-scrim.show{display:flex;}
+  .confirm-box{background:var(--card);border-radius:18px;max-width:340px;width:100%;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+  .confirm-msg{font-size:15px;font-weight:600;color:var(--ink);line-height:1.5;margin-bottom:18px;text-align:center;}
+  .confirm-btns{display:flex;gap:10px;}
+  .confirm-btns button{flex:1;padding:14px;border-radius:12px;font-weight:800;font-size:15px;}
+  .cf-cancel{background:#ECE8DF;color:var(--ink-2);}
+  .cf-ok{background:var(--red);color:#fff;}
+  .cf-ok:active,.cf-cancel:active{filter:brightness(.96);}
+  .icon-btn{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--steel);margin-left:8px;flex:none;}
+  .icon-btn:active{background:#EDEAE2;}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;margin:0 -2px;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--steel);}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .empty{text-align:center;padding:46px 24px;color:var(--steel);}
+  .empty .e-ico{width:62px;height:62px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 16px;color:var(--steel-2);}
+  .empty h3{margin:0 0 6px;color:var(--ink);font-size:16px;}
+  .empty p{margin:0;font-size:13.5px;line-height:1.5;}
+
+  .fab{position:fixed;bottom:88px;z-index:25;height:54px;padding:0 22px 0 18px;border-radius:999px;background:var(--amber);color:#16191D;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(232,135,14,.4);left:50%;transform:translateX(calc(-50% + 200px));}
+  .fab:active{transform:translateX(calc(-50% + 200px)) scale(.96);}
+  @media(max-width:520px){.fab{transform:none;right:18px;left:auto;}.fab:active{transform:scale(.96);}}
+
+  .nav{position:fixed;bottom:0;left:0;right:0;z-index:30;max-width:520px;margin:0 auto;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 6px calc(8px + env(safe-area-inset-bottom));}
+  .nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;color:var(--steel);}
+  .nav button .nl{font-size:10.5px;font-weight:600;letter-spacing:.1px;}
+  .nav button.on{color:var(--ink);}
+  .nav button.on svg{color:var(--amber);}
+
+  .scrim{position:fixed;inset:0;background:rgba(22,25,29,.46);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .scrim.show{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:520px;margin:0 auto;background:var(--concrete);border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:92vh;display:flex;flex-direction:column;}
+  .sheet.show{transform:translateY(0);}
+  .sheet-grip{width:40px;height:4px;border-radius:3px;background:var(--line);margin:10px auto 4px;}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:6px 18px 10px;gap:10px;}
+  .sheet-head h2{margin:0;font-size:18px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sheet-x{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--steel);background:#E9E5DC;flex:none;}
+  .sheet-body{overflow-y:auto;padding:4px 18px calc(22px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;}
+
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--steel);margin-bottom:7px;}
+  .field input,.field textarea,.field select{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-soft);}
+  .field textarea{resize:vertical;min-height:64px;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .stage-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:-4px;margin-bottom:8px;}
+  .stage-chips .sc{font-size:12px;font-weight:600;background:var(--amber-soft);color:#9A5803;border-radius:8px;padding:5px 9px;display:flex;align-items:center;gap:6px;}
+  .stage-chips .sc b{background:#fff;color:#9A5803;border-radius:5px;width:16px;height:16px;display:grid;place-items:center;font-size:10px;}
+  .stage-chips .sc i{font-style:normal;opacity:.7;font-weight:700;}
+
+  .pipeline{margin:6px 0 10px;}
+  .stage{display:flex;gap:13px;}
+  .stage-rail{width:30px;flex:none;display:flex;flex-direction:column;align-items:center;}
+  .stage-dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;background:#EAE6DE;color:var(--steel);border:2px solid #EAE6DE;}
+  .stage.done .stage-dot{background:var(--green);border-color:var(--green);color:#fff;}
+  .stage.current .stage-dot{background:#fff;border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px var(--amber-soft);}
+  .stage-line{flex:1;width:2px;min-height:14px;background:#E0DBD1;margin:3px 0;}
+  .stage.done .stage-line{background:var(--green);}
+  .stage-main{flex:1;min-width:0;padding-bottom:18px;}
+  .stage-name{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .stage-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:6px;}
+  .tag-done{background:var(--green-soft);color:#176B3C;}
+  .tag-now{background:var(--amber-soft);color:#9A5803;}
+  .tag-wait{background:#EDEAE2;color:var(--steel);}
+  .stage-worker{width:100%;margin-top:9px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:14px;}
+
+  .psteps{margin-top:11px;display:flex;flex-direction:column;gap:7px;}
+  .pstep{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--card);text-align:left;width:100%;font-size:14px;color:var(--ink);}
+  .pstep:active{transform:scale(.99);}
+  .pstep .box{width:21px;height:21px;border-radius:6px;border:2px solid var(--steel-2);flex:none;display:grid;place-items:center;color:#fff;}
+  .pstep.on{border-color:#BFE4CC;background:var(--green-soft);}
+  .pstep.on .box{background:var(--green);border-color:var(--green);}
+  .pstep.on .plabel{color:#176B3C;}
+  .pstep .plabel{flex:1;font-weight:500;}
+  .step-group{border:1px solid var(--line);border-radius:11px;background:var(--card);padding:11px 12px;}
+  .step-group .sg-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;font-size:14px;}
+  .step-group .sg-head .sg-prog{font-size:11px;font-weight:700;color:var(--steel);}
+  .step-group.done .sg-head{color:#176B3C;}
+  .substep{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;background:#FAF8F3;border:1px solid var(--line);text-align:left;width:100%;font-size:13.5px;color:var(--ink);margin-top:7px;}
+  .substep .box{width:18px;height:18px;border-radius:5px;border:2px solid var(--steel-2);flex:none;display:grid;place-items:center;color:#fff;}
+  .substep.on{background:var(--green-soft);border-color:#BFE4CC;}
+  .substep.on .box{background:var(--green);border-color:var(--green);}
+  .substep .plabel{flex:1;}
+
+  .rsteps{margin-top:9px;display:flex;flex-direction:column;gap:5px;}
+  .rstep{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);}
+  .rstep.sub{margin-left:22px;font-size:12.5px;color:var(--steel);}
+  .rstep .rb{width:16px;height:16px;border-radius:5px;border:2px solid var(--steel-2);flex:none;display:grid;place-items:center;color:#fff;}
+  .rstep.on .rb{background:var(--green);border-color:var(--green);}
+  .rstep.on{color:var(--steel);}
+
+  .linkbtn{font-size:12.5px;font-weight:700;color:var(--blue);padding:8px 2px 2px;display:inline-flex;align-items:center;gap:6px;}
+  .stage-act{margin-top:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .mini{padding:11px 14px;border-radius:11px;font-weight:800;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;justify-content:center;}
+  .mini-done{background:var(--green);color:#fff;flex:1;}
+  .mini-undo{background:#EDEAE2;color:var(--ink-2);}
+
+  .deliver-box{background:var(--green-soft);border:1px solid #C5E6D2;border-radius:14px;padding:16px;margin:6px 0 15px;}
+  .deliver-box .dh{display:flex;align-items:center;gap:8px;font-weight:800;color:#176B3C;margin-bottom:12px;font-size:15px;}
+  .delivered-note{background:var(--green-soft);border:1px solid #C5E6D2;border-radius:14px;padding:14px 16px;margin:6px 0 15px;color:#176B3C;font-size:13.5px;line-height:1.5;}
+  .days-pill{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:#2C5481;font-weight:700;font-size:12.5px;padding:6px 11px;border-radius:9px;margin:2px 0 14px;}
+
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:13px;font-weight:800;font-size:15px;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-amber{background:var(--amber);color:#16191D;}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-soft{background:#E7E3DA;color:var(--ink-2);}
+  .btn-ghost{background:transparent;color:var(--red);font-weight:700;}
+  .btn-ghost:active{background:var(--red-soft);}
+  .btn:active{filter:brightness(.96);}
+  .btn-row{display:flex;gap:10px;margin-top:12px;}
+  .btn-row .btn{flex:1;}
+
+  .meta-line{font-size:13px;color:var(--steel);margin:2px 0 16px;line-height:1.6;}
+  .hint{font-size:12px;color:var(--steel-2);margin-top:6px;line-height:1.5;}
+
+  .stg-item{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px 9px 12px;margin-bottom:8px;}
+  .stg-item .num{width:22px;height:22px;border-radius:6px;background:var(--amber-soft);color:#9A5803;font-weight:800;font-size:12px;display:grid;place-items:center;flex:none;}
+  .stg-item .n{flex:1;min-width:0;font-weight:600;font-size:14.5px;}
+  .stg-item .n .sub{font-size:11.5px;color:var(--steel);font-weight:600;margin-top:2px;}
+  .stg-item button{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--steel);background:#EFECE4;flex:none;}
+  .stg-item button:active{background:#E3DFD5;}
+  .stg-item button:disabled{opacity:.3;}
+  .stg-item button.del{color:var(--red);}
+  .add-row{display:flex;gap:8px;margin-top:12px;}
+  .add-row input{flex:1;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);}
+  .add-row button{flex:none;padding:0 18px;border-radius:12px;background:var(--ink);color:#fff;font-weight:800;}
+  .sub-h{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--steel);margin:20px 0 10px;}
+  .subhead{display:flex;align-items:center;gap:10px;margin:0 0 14px;}
+  .backbtn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:#E9E5DC;color:var(--ink-2);flex:none;}
+  .subhead .t{font-weight:800;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .info-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;color:var(--ink-2);line-height:1.55;}
+  .info-card b{color:var(--ink);}
+  .steps-num{background:#fff;border:1px solid var(--line);color:var(--blue);font-weight:700;font-size:11px;border-radius:6px;padding:2px 7px;}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:150px;z-index:60;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;pointer-events:none;max-width:88%;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand-mark">F</div>
+    <div style="flex:1;min-width:0;">
+      <input id="brandName" class="brand-name" value="My Factory" maxlength="32" />
+      <div class="brand-sub">Labour &amp; Work Manager</div>
+    </div>
+    <button class="gear" data-action="settings" aria-label="Settings">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+    </button>
+  </header>
+  <main class="view" id="view"></main>
+</div>
+
+<button class="fab" id="fab" data-action="fab">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  <span id="fabLabel">New job</span>
+</button>
+
+<nav class="nav">
+  <button data-action="tab" data-tab="dashboard" id="tab-dashboard" class="on">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    <span class="nl">Overview</span>
+  </button>
+  <button data-action="tab" data-tab="jobs" id="tab-jobs">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4M20 7l-2 12a2 2 0 0 1-2 1.7H8a2 2 0 0 1-2-1.7L4 7M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+    <span class="nl">Jobs</span>
+  </button>
+  <button data-action="tab" data-tab="team" id="tab-team">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>
+    <span class="nl">Team</span>
+  </button>
+</nav>
+
+<div class="scrim" id="scrim" data-action="close"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grip"></div>
+  <div class="sheet-head">
+    <h2 id="sheetTitle">Add</h2>
+    <button class="sheet-x" data-action="close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+<div class="confirm-scrim" id="confirmScrim">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="cf-cancel" id="confirmCancel">Cancel</button>
+      <button class="cf-ok" id="confirmOk">OK</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ===== Storage: window.storage (Claude) -> localStorage (device) -> memory ===== */
+const Store = {
+  mem:{},
+  hasWS(){ return typeof window!=="undefined" && window.storage && typeof window.storage.get==="function"; },
+  hasLS(){ try{ return typeof localStorage!=="undefined"; }catch(e){ return false; } },
+  async get(key, def){
+    if(this.hasWS()){ try{ const r=await window.storage.get(key,false); return r&&r.value!=null?JSON.parse(r.value):def; }catch(e){} }
+    if(this.hasLS()){ try{ const v=localStorage.getItem("ff_"+key); if(v!=null)return JSON.parse(v); }catch(e){} }
+    return (key in this.mem)?this.mem[key]:def;
+  },
+  async set(key,val){
+    this.mem[key]=val;
+    if(this.hasWS()){ try{ await window.storage.set(key,JSON.stringify(val),false); }catch(e){} }
+    if(this.hasLS()){ try{ localStorage.setItem("ff_"+key,JSON.stringify(val)); }catch(e){} }
+  }
+};
+
+/* ===== Defaults ===== */
+function defaultStages(){
+  return [
+    {name:"Carpentry", steps:[{name:"Cutting",subs:[]},{name:"Assembly",subs:[]},{name:"Sanding",subs:[]}]},
+    {name:"Polish / Paint", steps:[{name:"Primer",subs:[]},{name:"Coating",subs:[]},{name:"Drying",subs:[]}]},
+    {name:"Packing", steps:[{name:"Wrapping",subs:[]},{name:"Boxing",subs:[]}]}
+  ];
+}
+
+/* ===== State ===== */
+let workers=[], jobs=[];
+let settings={ factory:"My Factory", stages:defaultStages() };
+let activeTab="dashboard", jobFilter="all";
+let editStageIdx=null, editStepIdx=null;       // template editors
+let editJobId=null, editSid=null, editPid=null; // per-job editors
+
+/* ===== Helpers ===== */
+const $=(s,r=document)=>r.querySelector(s);
+const view=$("#view");
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>(s==null?"":String(s)).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const todayISO=()=>new Date().toISOString().slice(0,10);
+const initials=n=>(n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+function fmtDate(iso){ if(!iso)return"—"; const d=new Date((""+iso).length<=10?iso+"T00:00:00":iso); if(isNaN(d))return"—"; return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}); }
+function daysLeft(iso){ if(!iso)return null; const a=new Date(iso+"T00:00:00"),b=new Date(todayISO()+"T00:00:00"); return Math.round((a-b)/86400000); }
+function dayDiff(startISO,endMs){ if(!startISO||!endMs)return null; const a=new Date(startISO+"T00:00:00").getTime(); const d=Math.round((endMs-a)/86400000); return Math.max(0,d); }
+function workerName(id){ const w=workers.find(w=>w.id===id); return w?w.name:""; }
+
+function stepHasSubs(p){ return Array.isArray(p.subs)&&p.subs.length>0; }
+function stepDone(p){ return stepHasSubs(p)? p.subs.every(x=>x.done) : !!p.done; }
+function stageHasSteps(s){ return Array.isArray(s.steps)&&s.steps.length>0; }
+function stageDone(s){ return stageHasSteps(s)? s.steps.every(stepDone) : !!s.done; }
+function jobQty(j){ const q=parseInt(j&&j.qty,10); return (q&&q>1)?q:1; }
+function isQtyJob(j){ return jobQty(j)>1; }
+function stageComplete(j,s){ return isQtyJob(j)? (s.qtyDone||0)>=jobQty(j) : stageDone(s); }
+function stageUpstream(j,idx){ return idx<=0? jobQty(j) : (j.stages[idx-1].qtyDone||0); }
+function stageWip(j,idx){ return Math.max(0, stageUpstream(j,idx)-(j.stages[idx].qtyDone||0)); }
+function stagesDoneCount(j){ return (j.stages||[]).filter(s=>stageComplete(j,s)).length; }
+function allDone(j){ const s=j.stages||[]; return s.length>0 && s.every(x=>stageComplete(j,x)); }
+function currentStageIndex(j){ const s=j.stages||[]; const i=s.findIndex(x=>!stageComplete(j,x)); return i===-1?s.length-1:i; }
+function leafCounts(j){
+  let total=0,done=0;
+  (j.stages||[]).forEach(s=>{
+    if(stageHasSteps(s)) s.steps.forEach(p=>{
+      if(stepHasSubs(p)){ total+=p.subs.length; done+=p.subs.filter(x=>x.done).length; }
+      else { total+=1; done+=stepDone(p)?1:0; }
+    });
+    else { total+=1; done+=s.done?1:0; }
+  });
+  return {total,done};
+}
+function progressPct(j){
+  if(isQtyJob(j)){ const q=jobQty(j), n=(j.stages||[]).length; if(!n)return 0;
+    const done=(j.stages||[]).reduce((a,s)=>a+Math.min(q,(s.qtyDone||0)),0); return Math.round(done/(q*n)*100); }
+  const {total,done}=leafCounts(j); return total?Math.round(done/total*100):0;
+}
+function jobStatus(j){ if(j.status==="delivered")return"delivered"; if(allDone(j))return"completed"; return"active"; }
+function isOverdue(j){ if(jobStatus(j)!=="active"||isPaused(j))return false; const dl=daysLeft(j.due); return dl!=null&&dl<0; }
+
+function recompute(j){
+  const now=Date.now(); const qty=isQtyJob(j); let prevDone=true;
+  (j.stages||[]).forEach((s,idx)=>{
+    const reached = qty ? (idx===0 ? true : (j.stages[idx-1].qtyDone||0)>0) : prevDone;
+    if(reached){ if(!s.startedAt)s.startedAt=now; } else { s.startedAt=null; }
+    if(!qty){
+      (s.steps||[]).forEach(p=>{
+        (p.subs||[]).forEach(sub=>{ if(sub.done){ if(!sub.doneAt)sub.doneAt=now; } else sub.doneAt=null; });
+        if(stepDone(p)){ if(!p.doneAt)p.doneAt=now; } else p.doneAt=null;
+      });
+    }
+    if(stageComplete(j,s)){ if(!s.doneAt)s.doneAt=now; } else s.doneAt=null;
+    prevDone=prevDone&&stageComplete(j,s);
+  });
+  if(allDone(j)){ if(!j.completedAt)j.completedAt=now; } else j.completedAt=null;
+}
+
+/* pause / time tracking */
+function isPaused(j){ const p=j.pauses; return Array.isArray(p)&&p.length&&p[p.length-1].to==null; }
+function pausedOverlapMs(j,a,b){
+  if(!Array.isArray(j.pauses)||a==null||b==null||b<=a)return 0;
+  let sum=0;
+  j.pauses.forEach(iv=>{ const from=iv.from, to=(iv.to==null?Date.now():iv.to); const lo=Math.max(a,from), hi=Math.min(b,to); if(hi>lo)sum+=hi-lo; });
+  return sum;
+}
+function jobStartMs(j){ return j.start?new Date(j.start+"T00:00:00").getTime():(j.createdAt||Date.now()); }
+function jobEndMs(j){
+  if(j.status==="delivered"&&j.deliveredOn)return new Date(j.deliveredOn+"T00:00:00").getTime();
+  if(j.completedAt)return j.completedAt;
+  return Date.now();
+}
+function jobWorkingDays(j){
+  const a=jobStartMs(j), b=jobEndMs(j); if(b<a)return 0;
+  const ms=(b-a)-pausedOverlapMs(j,a,b);
+  return Math.max(0,Math.round(ms/86400000));
+}
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200); }
+function uiConfirm(msg,okLabel,cancelLabel){
+  return new Promise(resolve=>{
+    const scrim=$("#confirmScrim"), ok=$("#confirmOk"), cancel=$("#confirmCancel");
+    $("#confirmMsg").textContent=msg; ok.textContent=okLabel||"OK"; cancel.textContent=cancelLabel||"Cancel";
+    scrim.classList.add("show");
+    const done=v=>{ scrim.classList.remove("show"); ok.onclick=null; cancel.onclick=null; scrim.onclick=null; resolve(v); };
+    ok.onclick=()=>done(true); cancel.onclick=()=>done(false);
+    scrim.onclick=e=>{ if(e.target===scrim)done(false); };
+  });
+}
+const isiOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent||"");
+
+const ic={
+  user:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  cal:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  pin:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+  truck:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16V5a1 1 0 0 0-1-1H2v12M14 9h4l3 3v4M2 16h12"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>',
+  layers:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></svg>',
+  clock:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  pause:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
+  play:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>',
+  dots:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+  check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  checkS:'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  back:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  pen:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  up:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+  down:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13M8 6l4-4 4 4"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7"/></svg>'
+};
+
+/* ===== Dashboard ===== */
+function avgCompletionDays(){
+  const done=jobs.filter(j=>j.completedAt&&j.start);
+  if(!done.length)return null;
+  const sum=done.reduce((a,j)=>a+jobWorkingDays(j),0);
+  return Math.round(sum/done.length*10)/10;
+}
+
+/* ===== Charts (inline SVG/CSS, no libraries) ===== */
+function emptyChart(msg){ return `<div class="chart-empty">${esc(msg)}</div>`; }
+function donutChart(segs,centerTop,centerSub){
+  const total=segs.reduce((a,s)=>a+s.value,0);
+  if(total<=0)return emptyChart("No data yet");
+  const r=42,C=2*Math.PI*r,cx=60,cy=60; let off=0;
+  const arcs=segs.filter(s=>s.value>0).map(s=>{
+    const len=s.value/total*C, el=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="16" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    off+=len; return el;
+  }).join("");
+  const legend=segs.map(s=>`<div class="lg"><span class="lgdot" style="background:${s.color}"></span><span class="lgl">${esc(s.label)}</span><b>${s.value}</b></div>`).join("");
+  return `<div class="chart-flex"><svg viewBox="0 0 120 120" class="donut">${arcs}<text x="60" y="57" text-anchor="middle" class="d-top">${centerTop}</text><text x="60" y="73" text-anchor="middle" class="d-sub">${esc(centerSub)}</text></svg><div class="legend-col">${legend}</div></div>`;
+}
+function barsH(items){
+  if(!items.length)return emptyChart("No data yet");
+  const max=Math.max(1,...items.map(i=>i.value));
+  return `<div class="bars">`+items.map(i=>`<div class="bar-row"><div class="bar-lbl">${esc(i.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(i.value/max*100)}%;background:${i.color||"var(--amber)"}"></div></div><div class="bar-val">${i.value}</div></div>`).join("")+`</div>`;
+}
+function barsV(items){
+  const max=Math.max(1,...items.map(i=>i.value));
+  if(items.every(i=>!i.value))return emptyChart("No deliveries recorded yet");
+  return `<div class="vbars">`+items.map(i=>`<div class="vbar"><div class="vbar-val">${i.value||""}</div><div class="vbar-col"><div class="vbar-fill" style="height:${i.value?Math.max(6,Math.round(i.value/max*100)):0}%"></div></div><div class="vbar-lbl">${esc(i.label)}</div></div>`).join("")+`</div>`;
+}
+function statusSegments(){
+  const a=jobs.filter(j=>jobStatus(j)==="active"&&!isPaused(j)).length;
+  const p=jobs.filter(j=>jobStatus(j)==="active"&&isPaused(j)).length;
+  const r=jobs.filter(j=>jobStatus(j)==="completed").length;
+  const d=jobs.filter(j=>jobStatus(j)==="delivered").length;
+  return [{label:"In progress",value:a,color:"#E8870E"},{label:"Paused",value:p,color:"#9AA0A6"},{label:"Ready",value:r,color:"#3A6EA5"},{label:"Delivered",value:d,color:"#1F9D57"}];
+}
+function stageWorkload(){
+  const counts={};
+  jobs.filter(j=>jobStatus(j)==="active").forEach(j=>{ const s=(j.stages||[])[currentStageIndex(j)]; if(s){ counts[s.name]=(counts[s.name]||0)+1; } });
+  const order=settings.stages.map(s=>s.name);
+  const names=Object.keys(counts).sort((a,b)=>{ const ia=order.indexOf(a),ib=order.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+  return names.map(n=>({label:n,value:counts[n],color:"var(--amber)"}));
+}
+function deliveriesByMonth(){
+  const now=new Date(), buckets=[];
+  for(let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); buckets.push({key:d.getFullYear()+"-"+d.getMonth(),label:d.toLocaleDateString(undefined,{month:"short"}),value:0}); }
+  jobs.forEach(j=>{ if(j.status==="delivered"&&j.deliveredOn){ const d=new Date(j.deliveredOn+"T00:00:00"); const k=d.getFullYear()+"-"+d.getMonth(); const b=buckets.find(x=>x.key===k); if(b)b.value++; } });
+  return buckets;
+}
+function analysisBlock(){
+  if(!jobs.length)return "";
+  const seg=statusSegments(), total=seg.reduce((a,s)=>a+s.value,0);
+  const wl=stageWorkload();
+  return `
+    <div class="section-h"><h2>Analysis</h2></div>
+    <div class="chart-card"><div class="chart-title">Jobs by status</div>${donutChart(seg,total,"total jobs")}</div>
+    <div class="chart-card"><div class="chart-title">Where work sits now <span class="ct-sub">active jobs per stage — spot the bottleneck</span></div>${wl.length?barsH(wl):emptyChart("No active jobs right now")}</div>
+    <div class="chart-card"><div class="chart-title">Deliveries — last 6 months</div>${barsV(deliveriesByMonth())}</div>`;
+}
+
+function renderDashboard(){
+  const active=jobs.filter(j=>jobStatus(j)==="active");
+  const completed=jobs.filter(j=>jobStatus(j)==="completed");
+  const delivered=jobs.filter(j=>jobStatus(j)==="delivered");
+  const overdue=jobs.filter(isOverdue);
+  const avg=avgCompletionDays();
+  let attention=jobs.filter(j=>jobStatus(j)!=="delivered").sort((a,b)=>{
+    const oa=isOverdue(a)?0:1,ob=isOverdue(b)?0:1; if(oa!==ob)return oa-ob;
+    return (daysLeft(a.due)??9999)-(daysLeft(b.due)??9999);
+  }).slice(0,4);
+  view.innerHTML=`
+    <div class="view-title">Today · ${esc(fmtDate(todayISO()))}</div>
+    <div class="stats">
+      <div class="tile accent"><div class="num">${active.length}</div><div class="lbl">Jobs in progress</div></div>
+      <div class="tile"><div class="num">${workers.length}</div><div class="lbl">Workers on roll</div></div>
+      <div class="tile"><div class="num">${completed.length}</div><div class="lbl">Packed, awaiting delivery</div></div>
+      <div class="tile good"><div class="num">${delivered.length}</div><div class="lbl">Delivered to client</div></div>
+    </div>
+    ${avg!=null?`<div class="avg-card">${ic.clock}<div><div class="big">${avg} days</div><div class="lbl">Average time to finish a job (start → done)</div></div></div>`:""}
+    ${overdue.length?`<div class="card" style="border-color:#EFC7BF;background:var(--red-soft);box-shadow:none;margin-top:14px;display:flex;gap:10px;align-items:center;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <div style="font-size:13.5px;color:#A6311F;font-weight:600;">${overdue.length} job${overdue.length>1?"s are":" is"} past the due date</div></div>`:""}
+    ${analysisBlock()}
+    <div class="section-h"><h2>Needs attention</h2><span class="count">${attention.length} shown</span></div>
+    <div>${attention.length?attention.map(jobCard).join(""):emptyInline("All caught up","No pending jobs right now.")}</div>`;
+}
+function emptyInline(h,p){ return `<div class="card" style="text-align:center;color:var(--steel);box-shadow:none;"><div style="font-weight:700;color:var(--ink);margin-bottom:3px;">${esc(h)}</div><div style="font-size:13px;">${esc(p)}</div></div>`; }
+
+/* ===== Job card ===== */
+function jobCard(j){
+  const st=jobStatus(j), over=isOverdue(j), pct=progressPct(j), paused=isPaused(j)&&st==="active";
+  const badge=paused?`<span class="badge b-paused">Paused</span>`
+    :over?`<span class="badge b-overdue">Overdue</span>`
+    :st==="delivered"?`<span class="badge b-delivered">Delivered</span>`
+    :st==="completed"?`<span class="badge b-completed">Ready</span>`
+    :`<span class="badge b-active">In progress</span>`;
+  const total=(j.stages||[]).length, ci=currentStageIndex(j);
+  const cur=total?j.stages[ci]:null;
+  const curWorker=cur?workerName(cur.workerId):"";
+  let cap;
+  if(st==="delivered")cap="";
+  else if(st==="completed")cap="Ready to deliver";
+  else if(!cur)cap="No stages";
+  else if(isQtyJob(j)){ const q=jobQty(j); cap=`${esc(cur.name)} · ${cur.qtyDone||0}/${q} units`; }
+  else if(stageHasSteps(cur)){ const dn=cur.steps.filter(stepDone).length; cap=`${esc(cur.name)} · ${dn}/${cur.steps.length} steps`; }
+  else cap=`Step ${ci+1}/${total} · ${esc(cur.name)}`;
+  let dueChip;
+  if(st==="delivered"&&j.deliveredOn)dueChip=`<span class="chiplet">${ic.truck} Delivered ${esc(fmtDate(j.deliveredOn))}</span>`;
+  else if(st==="completed")dueChip=`<span class="chiplet" style="color:var(--blue);font-weight:600;">${ic.truck} Ready to deliver</span>`;
+  else if(paused)dueChip=`<span class="chiplet" style="color:var(--steel);font-weight:600;">${ic.pause} On hold</span>`;
+  else { const dl=daysLeft(j.due);
+    if(dl==null)dueChip=`<span class="chiplet">${ic.cal} No due date</span>`;
+    else if(dl<0)dueChip=`<span class="chiplet warn">${ic.cal} ${Math.abs(dl)}d overdue</span>`;
+    else if(dl===0)dueChip=`<span class="chiplet warn">${ic.cal} Due today</span>`;
+    else dueChip=`<span class="chiplet">${ic.cal} ${dl}d left</span>`;
+  }
+  const showWorker=st==="active"?curWorker:"";
+  return `
+  <div class="card tap" data-action="open-job" data-id="${j.id}">
+    <div class="job-top">
+      <div style="min-width:0;"><h3 class="job-title">${esc(j.title)}${isQtyJob(j)?` <span class="qty-pill">×${jobQty(j)}</span>`:""}</h3>
+        <div class="job-client">${ic.pin}<span>${esc(j.client||"No client")}${j.site?` · ${esc(j.site)}`:""}</span></div></div>
+      ${badge}
+    </div>
+    ${st!=="delivered"?`<div class="pbar-wrap">
+      <div class="pbar-meta"><span class="pbar-pct">${pct}%</span><span class="pbar-cap">${cap}</span></div>
+      <div class="pbar ${pct>=100?"is-done":""}"><span style="width:${pct}%"></span></div></div>`:""}
+    <div class="job-foot">
+      ${showWorker?`<span class="chiplet"><span class="avatar">${esc(initials(showWorker))}</span>${esc(showWorker)}</span>`
+        :(st==="active"?`<span class="chiplet" style="color:var(--steel-2)">${ic.user} Unassigned</span>`:"")}
+      ${dueChip}
+    </div>
+  </div>`;
+}
+
+/* ===== Jobs view ===== */
+function renderJobs(){
+  const filters=[["all","All"],["active","In progress"],["completed","Ready"],["delivered","Delivered"]];
+  let list=jobs.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(jobFilter!=="all")list=list.filter(j=>jobStatus(j)===jobFilter);
+  view.innerHTML=`
+    <div class="view-title">Work orders</div>
+    <div class="chips">${filters.map(([k,l])=>`<button class="chip ${jobFilter===k?"on":""}" data-action="filter" data-f="${k}">${l}</button>`).join("")}</div>
+    ${list.length?list.map(jobCard).join(""):emptyState("jobs")}`;
+}
+
+/* ===== Team / ranking ===== */
+function workerStats(){
+  const stats=workers.map(w=>{
+    let steps=0,stages=0,active=0,durTotal=0,durCount=0; const jset=new Set();
+    jobs.forEach(j=>(j.stages||[]).forEach(s=>{
+      if(s.workerId!==w.id)return; jset.add(j.id);
+      if(isQtyJob(j)) steps+=(s.qtyDone||0);
+      else if(stageHasSteps(s)) s.steps.forEach(p=>{ if(stepHasSubs(p))steps+=p.subs.filter(x=>x.done).length; else steps+=stepDone(p)?1:0; });
+      else steps+=s.done?1:0;
+      const sd=stageComplete(j,s);
+      if(sd){ stages++; if(s.startedAt&&s.doneAt&&s.doneAt>=s.startedAt){ const d=(s.doneAt-s.startedAt)-pausedOverlapMs(j,s.startedAt,s.doneAt); if(d>=0){ durTotal+=d; durCount++; } } }
+      if(jobStatus(j)==="active"&&!sd)active++;
+    }));
+    const avgDays=durCount?(durTotal/durCount/86400000):null;
+    return {w,steps,stages,active,jobs:jset.size,avgDays};
+  });
+  const withSpeed=stats.filter(s=>s.avgDays!=null);
+  const teamAvg=withSpeed.length?withSpeed.reduce((a,s)=>a+s.avgDays,0)/withSpeed.length:null;
+  stats.forEach(s=>{
+    if(s.avgDays==null||teamAvg==null){ s.speed="none"; }
+    else if(s.avgDays<=teamAvg*0.85)s.speed="fast";
+    else if(s.avgDays<=teamAvg*1.2)s.speed="ok";
+    else s.speed="slow";
+  });
+  stats.sort((a,b)=> b.steps-a.steps || b.stages-a.stages || (a.avgDays??99)-(b.avgDays??99));
+  return {stats,teamAvg};
+}
+function renderTeam(){
+  const {stats,teamAvg}=workerStats();
+  if(!workers.length){ view.innerHTML=`<div class="view-title">Team performance</div>${emptyState("workers")}`; return; }
+  const speedLabel={fast:"Fast",ok:"On pace",slow:"Slow",none:"No data"};
+  const speedCls={fast:"sp-fast",ok:"sp-ok",slow:"sp-slow",none:"sp-none"};
+  const fmtAvg=a=>a==null?"—":(a<1?(Math.round(a*10)/10+"d"):(Math.round(a*10)/10+"d"));
+  const totSteps=stats.reduce((a,s)=>a+s.steps,0);
+  const totStages=stats.reduce((a,s)=>a+s.stages,0);
+  const top=stats.find(s=>s.steps>0);
+  view.innerHTML=`
+    <div class="view-title">Team performance · ${workers.length}</div>
+    <div class="team-summary">
+      <div class="ts"><div class="n">${totSteps}</div><div class="l">Steps done</div></div>
+      <div class="ts"><div class="n">${totStages}</div><div class="l">Stages done</div></div>
+      <div class="ts"><div class="n" style="font-size:15px;line-height:1.2;">${top?esc(top.w.name.split(/\s+/)[0]):"—"}</div><div class="l">Top performer</div></div>
+    </div>
+    ${teamAvg!=null?`<div class="hint" style="margin:0 2px 14px;">Speed = each worker's average time to finish one stage, vs the team average (${Math.round(teamAvg*10)/10} days/stage). Tap a worker for full details.</div>`:`<div class="hint" style="margin:0 2px 14px;">Rankings build up as workers finish stages and steps. Tap a worker for details.</div>`}
+    ${totSteps>0?`<div class="chart-card"><div class="chart-title">Output by worker <span class="ct-sub">process steps completed</span></div>${barsH(stats.filter(s=>s.steps>0).slice(0,6).map(s=>({label:s.w.name.split(/\s+/)[0],value:s.steps,color:"var(--amber)"})))}</div>`:""}
+    ${stats.map((s,i)=>{
+      const r=i+1;
+      return `<div class="card"><div class="lead" data-action="worker-detail" data-id="${s.w.id}" style="cursor:pointer;">
+        <div class="rank ${r<=3?"r"+r:""}">${r}</div>
+        <div class="av">${esc(initials(s.w.name))}</div>
+        <div style="min-width:0;flex:1;">
+          <div class="wname">${esc(s.w.name)}</div>
+          <div class="wmeta">${esc(s.w.skill||"Worker")} · ${s.stages} stage${s.stages!==1?"s":""} done · ${s.active} active · ${fmtAvg(s.avgDays)}/stage</div>
+          <span class="speed ${speedCls[s.speed]}">${speedLabel[s.speed]}</span>
+        </div>
+        <div class="right"><div class="stepnum">${s.steps}</div><div class="steplbl">steps done</div></div>
+      </div></div>`;
+    }).join("")}`;
+}
+
+function workerDetail(id){
+  const w=workers.find(x=>x.id===id); if(!w)return;
+  const {stats}=workerStats();
+  const me=stats.find(s=>s.w.id===id); if(!me)return;
+  const rank=stats.findIndex(s=>s.w.id===id)+1;
+  const speedLabel={fast:"Fast",ok:"On pace",slow:"Slow",none:"No data yet"};
+  const speedCls={fast:"sp-fast",ok:"sp-ok",slow:"sp-slow",none:"sp-none"};
+  const fmtAvg=a=>a==null?"—":(Math.round(a*10)/10+" days");
+  // active assignments
+  let activeRows="", doneRows="";
+  jobs.forEach(j=>{
+    const st=jobStatus(j);
+    (j.stages||[]).forEach(s=>{
+      if(s.workerId!==id)return;
+      const qmode=isQtyJob(j);
+      const dn=qmode?(s.qtyDone||0):(stageHasSteps(s)?s.steps.filter(stepDone).length:0), tot=qmode?jobQty(j):(stageHasSteps(s)?s.steps.length:0);
+      if(st==="active"&&!stageComplete(j,s)){
+        const tag=isPaused(j)?`<span class="meta" style="color:var(--steel)">paused</span>`:`<span class="meta">${tot?dn+"/"+tot+(qmode?" units":" steps"):"in progress"}</span>`;
+        activeRows+=`<div class="wd-row" data-action="open-job" data-id="${j.id}" style="cursor:pointer;"><span class="dot"></span><span>${esc(j.title)} · ${esc(s.name)}</span>${tag}</div>`;
+      } else if(stageComplete(j,s)){
+        let dtxt="";
+        if(s.startedAt&&s.doneAt){ const d=Math.max(0,Math.round(((s.doneAt-s.startedAt)-pausedOverlapMs(j,s.startedAt,s.doneAt))/86400000)); dtxt=`${d}d`; }
+        doneRows+=`<div class="wd-row" data-action="open-job" data-id="${j.id}" style="cursor:pointer;"><span class="dot" style="background:var(--green)"></span><span>${esc(j.title)} · ${esc(s.name)}</span>${dtxt?`<span class="meta">${dtxt}</span>`:""}</div>`;
+      }
+    });
+  });
+  openSheet(w.name);
+  $("#sheetBody").innerHTML=`
+    <div class="lead" style="margin:2px 0 16px;">
+      <div class="av" style="width:54px;height:54px;font-size:20px;">${esc(initials(w.name))}</div>
+      <div style="min-width:0;flex:1;"><div class="wname" style="font-size:18px;">${esc(w.name)}</div>
+        <div class="wmeta">${esc(w.skill||"Worker")}${w.phone?` · ${esc(w.phone)}`:""}</div>
+        <div style="margin-top:6px;"><span class="speed ${speedCls[me.speed]}">${speedLabel[me.speed]}</span> <span class="meta" style="font-size:12px;color:var(--steel);margin-left:4px;">Rank #${rank} of ${stats.length}</span></div>
+      </div>
+    </div>
+    <div class="wd-stats">
+      <div class="wd"><div class="n">${me.steps}</div><div class="l">Process steps completed</div></div>
+      <div class="wd"><div class="n">${me.stages}</div><div class="l">Stages completed</div></div>
+      <div class="wd"><div class="n">${me.active}</div><div class="l">Active tasks now</div></div>
+      <div class="wd"><div class="n" style="font-size:18px;">${fmtAvg(me.avgDays)}</div><div class="l">Avg time per stage</div></div>
+    </div>
+    <div class="sub-h">Working on now (${activeRows?activeRows.split('wd-row').length-1:0})</div>
+    ${activeRows||`<div class="hint" style="margin-bottom:4px;">No active task assigned.</div>`}
+    ${doneRows?`<div class="sub-h">Completed stages</div>${doneRows}`:""}
+    <div class="btn-row"><button class="btn btn-primary" data-action="edit-worker" data-id="${w.id}">Edit details</button>
+      <button class="btn btn-soft" data-action="close">Close</button></div>`;
+}
+
+
+function emptyState(kind){
+  if(kind==="workers")return `<div class="empty"><div class="e-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3>No workers yet</h3><p>Add your labour to assign them to stages and see who is fastest.</p></div>`;
+  return `<div class="empty"><div class="e-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4M20 7l-2 12a2 2 0 0 1-2 1.7H8a2 2 0 0 1-2-1.7L4 7M9 7V5a3 3 0 0 1 6 0v2"/></svg></div><h3>No jobs yet</h3><p>Create a work order to move it through your stages and deliver it.</p></div>`;
+}
+
+/* ===== Sheet ===== */
+function openSheet(t){ $("#sheetTitle").textContent=t; $("#scrim").classList.add("show"); $("#sheet").classList.add("show"); $("#sheetBody").scrollTop=0; }
+function closeSheet(){ $("#scrim").classList.remove("show"); $("#sheet").classList.remove("show"); }
+
+/* Worker form */
+function workerForm(w){
+  const e=w||{}; openSheet(w?"Edit worker":"Add worker");
+  $("#sheetBody").innerHTML=`
+    <div class="field"><label>Name</label><input id="f_name" placeholder="e.g. Khalid Mughal" value="${esc(e.name||"")}" /></div>
+    <div class="field"><label>Skill / department</label><input id="f_skill" placeholder="e.g. Carpenter, Painter, Packer" value="${esc(e.skill||"")}" /></div>
+    <div class="field"><label>Phone (optional)</label><input id="f_phone" type="tel" placeholder="03xx-xxxxxxx" value="${esc(e.phone||"")}" /></div>
+    <button class="btn btn-primary" data-action="save-worker" data-id="${e.id||""}">${w?"Save changes":"Add worker"}</button>
+    ${w?`<div class="btn-row"><button class="btn btn-ghost" data-action="delete-worker" data-id="${e.id}">Remove worker</button></div>`:""}`;
+}
+
+/* Job form */
+function jobForm(j){
+  const e=j||{}; openSheet(j?"Edit job":"New job");
+  const src = j ? (e.stages||[]) : settings.stages;
+  const chips = src.map((s,i)=>`<span class="sc"><b>${i+1}</b>${esc(s.name)}${(s.steps&&s.steps.length)?` <i>· ${s.steps.length}</i>`:""}</span>`).join("");
+  $("#sheetBody").innerHTML=`
+    <div class="field"><label>Job / product</label><input id="f_title" placeholder="e.g. 4 wooden doors" value="${esc(e.title||"")}" /></div>
+    <div class="two">
+      <div class="field"><label>Client</label><input id="f_client" placeholder="Client name" value="${esc(e.client||"")}" /></div>
+      <div class="field"><label>Delivery site</label><input id="f_site" placeholder="City / address" value="${esc(e.site||"")}" /></div>
+    </div>
+    <div class="two">
+      <div class="field"><label>Quantity (units)</label><input id="f_qty" type="number" min="1" inputmode="numeric" placeholder="1" value="${e.qty&&e.qty>1?e.qty:""}" /></div>
+      <div class="field"><label>Start date</label><input id="f_start" type="date" value="${esc(e.start||todayISO())}" /></div>
+    </div>
+    <div class="field"><label>Due date</label><input id="f_due" type="date" value="${esc(e.due||"")}" /></div>
+    ${j&&isQtyJob(j)?`<div class="hint" style="margin-top:-8px;margin-bottom:14px;">This job tracks ${jobQty(j)} units stage-by-stage. Changing quantity won't erase progress already entered.</div>`:`<div class="hint" style="margin-top:-8px;margin-bottom:14px;">Leave Quantity empty or 1 for a single item (tick-list mode). Set 2+ to track units flowing through each stage.</div>`}
+    <label style="display:block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--steel);margin-bottom:7px;">${ic.layers} Stages &amp; processes</label>
+    <div class="stage-chips">${chips||`<span class="sc">No stages — add some in settings</span>`}</div>
+    <div class="hint" style="margin-bottom:14px;">${j?`Open the job to assign workers and tick each process step.`:`From your workflow (gear icon). Open the job after creating to tick steps.`}</div>
+    <div class="field"><label>Notes (optional)</label><textarea id="f_notes" placeholder="Material, size, special instructions...">${esc(e.notes||"")}</textarea></div>
+    <button class="btn btn-amber" data-action="save-job" data-id="${e.id||""}">${j?"Save changes":"Create job"}</button>`;
+}
+
+/* Stage worker select */
+function stageWorkerSelect(j,s){
+  const opts=workers.map(w=>`<option value="${w.id}" ${s.workerId===w.id?"selected":""}>${esc(w.name)}${w.skill?` — ${esc(w.skill)}`:""}</option>`).join("");
+  return `<select class="stage-worker" data-action="assign-stage" data-id="${j.id}" data-sid="${s.id}">
+    <option value="">${workers.length?"— Assign worker —":"Add workers first"}</option>${opts}</select>`;
+}
+/* interactive steps (with sub-steps) */
+function stepsInteractive(j,s){
+  let html=`<div class="psteps">`;
+  s.steps.forEach(p=>{
+    if(stepHasSubs(p)){
+      const dn=p.subs.filter(x=>x.done).length, done=dn===p.subs.length;
+      html+=`<div class="step-group ${done?"done":""}">
+        <div class="sg-head"><span>${done?ic.check+" ":""}${esc(p.name)}</span><span class="sg-prog">${dn}/${p.subs.length}</span></div>
+        ${p.subs.map(sub=>`<button class="substep ${sub.done?"on":""}" data-action="toggle-sub" data-id="${j.id}" data-sid="${s.id}" data-pid="${p.id}" data-subid="${sub.id}"><span class="box">${sub.done?ic.checkS:""}</span><span class="plabel">${esc(sub.name)}</span></button>`).join("")}
+      </div>`;
+    } else {
+      html+=`<button class="pstep ${p.done?"on":""}" data-action="toggle-step" data-id="${j.id}" data-sid="${s.id}" data-pid="${p.id}"><span class="box">${p.done?ic.check:""}</span><span class="plabel">${esc(p.name)}</span></button>`;
+    }
+  });
+  html+=`</div><button class="linkbtn" data-action="job-step-edit" data-id="${j.id}" data-sid="${s.id}">${ic.pen} Edit steps &amp; sub-steps</button>`;
+  return html;
+}
+function stepsReadonly(s){
+  if(!stageHasSteps(s))return "";
+  let html=`<div class="rsteps">`;
+  s.steps.forEach(p=>{
+    const d=stepDone(p);
+    html+=`<div class="rstep ${d?"on":""}"><span class="rb">${d?ic.checkS:""}</span>${esc(p.name)}</div>`;
+    if(stepHasSubs(p)) p.subs.forEach(sub=>{ html+=`<div class="rstep sub ${sub.done?"on":""}"><span class="rb">${sub.done?ic.checkS:""}</span>${esc(sub.name)}</div>`; });
+  });
+  return html+`</div>`;
+}
+
+/* Job detail + pipeline */
+function jobDaysText(j){
+  const paused=pausedOverlapMs(j,jobStartMs(j),jobEndMs(j));
+  const note=paused>0?` (paused ${Math.round(paused/86400000)}d not counted)`:"";
+  if(j.status==="delivered"&&j.deliveredOn&&j.start){ const d=jobWorkingDays(j); return `${ic.clock} Delivered in ${d} working day${d!==1?"s":""}${note}`; }
+  if(j.completedAt&&j.start){ const d=jobWorkingDays(j); return `${ic.clock} Finished in ${d} working day${d!==1?"s":""}${note}`; }
+  return "";
+}
+function jobDetail(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  editJobId=null; editSid=null; editPid=null;
+  const st=jobStatus(j), ci=currentStageIndex(j);
+  openSheet(j.title);
+  const days=jobDaysText(j);
+  let body=`<div class="meta-line">
+      ${ic.pin} ${esc(j.client||"No client")}${j.site?` · ${esc(j.site)}`:""}<br/>
+      ${ic.cal} Start ${esc(fmtDate(j.start))}${j.due?` · Due ${esc(fmtDate(j.due))}`:""}
+      ${j.notes?`<br/><span style="color:var(--ink-2)">${esc(j.notes)}</span>`:""}
+    </div>
+    ${days?`<div class="days-pill">${days}</div>`:""}`;
+  if(st==="delivered"){
+    body+=`<div class="delivered-note"><strong>${ic.truck} Delivered to client</strong><br/>Date: ${esc(fmtDate(j.deliveredOn))}${j.deliveredNote?`<br/>Note: ${esc(j.deliveredNote)}`:""}</div>
+      <div class="sub-h">Stages</div><div class="pipeline">${pipelineHTML(j,-1,true)}</div>
+      <div class="btn-row"><button class="btn btn-primary" data-action="edit-job" data-id="${j.id}">Edit job</button>
+      <button class="btn btn-ghost" data-action="reopen-job" data-id="${j.id}">Undo delivery</button></div>`;
+  } else {
+    const paused=isPaused(j);
+    if(paused){
+      const since=j.pauses[j.pauses.length-1].from;
+      body+=`<div class="pause-banner">${ic.pause}<div style="flex:1;"><div class="pb-t">Job is on hold</div><div class="pb-s">Paused on ${esc(fmtDate(new Date(since).toISOString().slice(0,10)))} · day counting is stopped</div></div></div>
+      <button class="btn btn-amber" data-action="resume-job" data-id="${j.id}" style="margin-bottom:6px;">${ic.play} Resume work</button>`;
+    } else {
+      body+=`<button class="btn btn-soft" data-action="pause-job" data-id="${j.id}" style="margin-bottom:6px;">${ic.pause} Pause job (for an emergency)</button>`;
+    }
+    body+=`<div class="sub-h">${ic.layers} Stages — ${isQtyJob(j)?`${jobQty(j)} units · `:""}${stagesDoneCount(j)}/${(j.stages||[]).length} stages done · ${progressPct(j)}%</div>
+      <div class="pipeline">${pipelineHTML(j,ci,false)}</div>`;
+    if(allDone(j)){
+      body+=`<div class="deliver-box"><div class="dh">${ic.truck} Record delivery</div>
+        <div class="field"><label>Delivered on</label><input id="d_date" type="date" value="${todayISO()}" /></div>
+        <div class="field"><label>Delivery note (optional)</label><input id="d_note" placeholder="Received by, vehicle, GP no..." /></div>
+        <button class="btn btn-green" data-action="deliver-job" data-id="${j.id}">Mark as delivered</button></div>`;
+    } else body+=`<div class="hint" style="text-align:center;margin:2px 0 14px;">Finish every stage to record the delivery.</div>`;
+    body+=`<div class="btn-row"><button class="btn btn-primary" data-action="edit-job" data-id="${j.id}">Edit job</button>
+      <button class="btn btn-ghost" data-action="delete-job" data-id="${j.id}">Delete</button></div>`;
+  }
+  $("#sheetBody").innerHTML=body;
+}
+function qtyStageContent(j,s,i,readonly){
+  const q=jobQty(j), done=s.qtyDone||0, up=stageUpstream(j,i), wip=stageWip(j,i);
+  const downMin=i<j.stages.length-1?(j.stages[i+1].qtyDone||0):0;
+  let html=readonly?"":stageWorkerSelect(j,s);
+  html+=`<div class="qty-meta"><span><b>${done}</b>/${q} done</span>${wip>0?`<span class="qty-wip">${wip} in progress</span>`:""}${up<q?`<span class="qty-wait">${q-up} not arrived</span>`:""}</div>
+    <div class="pbar ${done>=q?"is-done":""}" style="margin-top:8px;"><span style="width:${Math.round(done/q*100)}%"></span></div>`;
+  if(!readonly){
+    const canInc=done<up, canDec=done>downMin;
+    html+=`<div class="qty-ctrl">
+      <button class="qbtn" data-action="qty-dec" data-id="${j.id}" data-sid="${s.id}" ${canDec?"":"disabled"}>−</button>
+      <div class="qty-num">${done}</div>
+      <button class="qbtn" data-action="qty-inc" data-id="${j.id}" data-sid="${s.id}" ${canInc?"":"disabled"}>+</button>
+      ${q>=20?`<button class="qbtn wide" data-action="qty-inc10" data-id="${j.id}" data-sid="${s.id}" ${canInc?"":"disabled"}>+10</button>`:""}
+      <button class="qbtn wide" data-action="qty-all" data-id="${j.id}" data-sid="${s.id}" ${done<up?"":"disabled"}>All ${up}</button>
+    </div>`;
+  }
+  return html;
+}
+function pipelineHTML(j,ci,readonly){
+  const stages=j.stages||[], qmode=isQtyJob(j);
+  return stages.map((s,i)=>{
+    const isLast=i===stages.length-1, done=stageComplete(j,s);
+    let state, tag;
+    if(qmode){
+      const wip=stageWip(j,i);
+      state=done?"done":(wip>0&&!readonly?"current":"upcoming");
+      tag=done?`<span class="stage-tag tag-done">Done</span>`:(wip>0?`<span class="stage-tag tag-now">${wip} in hand</span>`:`<span class="stage-tag tag-wait">Waiting</span>`);
+    } else {
+      state=done?"done":(i===ci&&!readonly?"current":"upcoming");
+      tag=done?`<span class="stage-tag tag-done">Done</span>`:(state==="current"?`<span class="stage-tag tag-now">Working</span>`:`<span class="stage-tag tag-wait">${readonly?"Not done":"Waiting"}</span>`);
+    }
+    let content="";
+    if(qmode){
+      content=qtyStageContent(j,s,i,readonly);
+    } else if(readonly){
+      content=(s.workerId?`<div class="hint" style="margin-top:6px;">${ic.user} ${esc(workerName(s.workerId))}</div>`:"")+stepsReadonly(s);
+    } else if(state==="current"){
+      content=stageWorkerSelect(j,s);
+      if(stageHasSteps(s)) content+=stepsInteractive(j,s);
+      else content+=`<div class="stage-act"><button class="mini mini-done" data-action="mark-stage-done" data-id="${j.id}" data-sid="${s.id}">${ic.check} Mark "${esc(s.name)}" done</button></div>
+        <button class="linkbtn" data-action="job-step-edit" data-id="${j.id}" data-sid="${s.id}">${ic.pen} Add process steps</button>`;
+    } else if(state==="done"){
+      content=(s.workerId?`<div class="hint" style="margin-top:6px;">${ic.user} ${esc(workerName(s.workerId))}</div>`:"")+stepsReadonly(s)
+        +`<div class="stage-act"><button class="mini mini-undo" data-action="reopen-stage" data-id="${j.id}" data-sid="${s.id}">Reopen</button></div>`;
+    } else {
+      content=stageWorkerSelect(j,s)+`<div class="hint" style="margin-top:7px;">${stageHasSteps(s)?`${s.steps.length} process step${s.steps.length>1?"s":""}`:"No steps"} · waiting</div>`;
+    }
+    return `<div class="stage ${state}">
+      <div class="stage-rail"><div class="stage-dot">${done?ic.check:(i+1)}</div>${!isLast?`<div class="stage-line"></div>`:""}</div>
+      <div class="stage-main"><div class="stage-name">${esc(s.name)} ${tag}</div>${content}</div>
+    </div>`;
+  }).join("");
+}
+
+/* Per-job step editor */
+function jobStepEditor(jobId,sid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid); if(!s)return;
+  editJobId=jobId; editSid=sid; editPid=null; s.steps=s.steps||[];
+  openSheet("Edit steps");
+  const rows=s.steps.map((p,k)=>`
+    <div class="stg-item">
+      <div class="num">${k+1}</div>
+      <div class="n" data-action="job-step-open" data-id="${jobId}" data-sid="${sid}" data-pid="${p.id}" style="cursor:pointer;">${esc(p.name)}
+        <div class="sub">${stepHasSubs(p)?`${p.subs.length} sub-step${p.subs.length>1?"s":""} ›`:"Add sub-steps ›"}</div></div>
+      <button data-action="jstep-up" data-k="${k}" ${k===0?"disabled":""}>${ic.up}</button>
+      <button data-action="jstep-down" data-k="${k}" ${k===s.steps.length-1?"disabled":""}>${ic.down}</button>
+      <button class="del" data-action="jstep-del" data-k="${k}">${ic.trash}</button>
+    </div>`).join("");
+  const present=new Set(s.steps.map(p=>(p.name||"").trim()));
+  const suggest=stepUsage(s.name).filter(u=>!present.has(u.name)).slice(0,6);
+  const sugHtml=suggest.length?`<div class="suggest"><div class="suggest-h">Used often — tap to add</div><div class="suggest-chips">${suggest.map(u=>`<button class="sg-chip" data-action="jstep-suggest" data-name="${esc(u.name)}">${esc(u.name)} <span>${u.count}×</span></button>`).join("")}</div></div>`:"";
+  $("#sheetBody").innerHTML=`
+    <div class="subhead"><button class="backbtn" data-action="open-job" data-id="${jobId}">${ic.back}</button><span class="t">${esc(s.name)} — process</span></div>
+    <div class="hint" style="margin-bottom:12px;">Steps for <b>this job only</b>. Tap a step to add sub-steps inside it.</div>
+    <div>${rows||`<div class="hint">No steps yet. Add the first one below.</div>`}</div>
+    ${sugHtml}
+    <div class="add-row"><input id="j_newStep" placeholder="Add a step (e.g. Fitting hinges)" /><button data-action="jstep-add">Add</button></div>
+    <button class="btn btn-primary" data-action="open-job" data-id="${jobId}" style="margin-top:18px;">Done</button>`;
+}
+function jobSubEditor(jobId,sid,pid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid); if(!s)return;
+  const p=s.steps.find(x=>x.id===pid); if(!p)return;
+  editJobId=jobId; editSid=sid; editPid=pid; p.subs=p.subs||[];
+  openSheet("Edit sub-steps");
+  const rows=p.subs.map((sub,k)=>`
+    <div class="stg-item">
+      <div class="num">${k+1}</div>
+      <div class="n">${esc(sub.name)}${sub.done?` <span class="stage-tag tag-done" style="margin-left:4px;">done</span>`:""}</div>
+      <button data-action="jsub-up" data-k="${k}" ${k===0?"disabled":""}>${ic.up}</button>
+      <button data-action="jsub-down" data-k="${k}" ${k===p.subs.length-1?"disabled":""}>${ic.down}</button>
+      <button class="del" data-action="jsub-del" data-k="${k}">${ic.trash}</button>
+    </div>`).join("");
+  $("#sheetBody").innerHTML=`
+    <div class="subhead"><button class="backbtn" data-action="job-step-edit" data-id="${jobId}" data-sid="${sid}">${ic.back}</button><span class="t">${esc(p.name)}</span></div>
+    <div class="hint" style="margin-bottom:12px;">Sub-steps inside <b>${esc(p.name)}</b>. The step finishes when all sub-steps are ticked.</div>
+    <div>${rows||`<div class="hint">No sub-steps yet. Add the first one below.</div>`}</div>
+    <div class="add-row"><input id="j_newSub" placeholder="Add a sub-step" /><button data-action="jsub-add">Add</button></div>
+    <button class="btn btn-primary" data-action="job-step-edit" data-id="${jobId}" data-sid="${sid}" style="margin-top:18px;">Done</button>`;
+}
+
+/* ===== Settings + template editors ===== */
+function settingsForm(){
+  editStageIdx=null; editStepIdx=null;
+  openSheet("Settings");
+  const rows=settings.stages.map((st,i)=>`
+    <div class="stg-item">
+      <div class="num">${i+1}</div>
+      <div class="n" data-action="stage-edit" data-i="${i}" style="cursor:pointer;">${esc(st.name)}
+        <div class="sub">${(st.steps&&st.steps.length)?`${st.steps.length} process step${st.steps.length>1?"s":""} ›`:"Add process steps ›"}</div></div>
+      <button data-action="stage-up" data-i="${i}" ${i===0?"disabled":""}>${ic.up}</button>
+      <button data-action="stage-down" data-i="${i}" ${i===settings.stages.length-1?"disabled":""}>${ic.down}</button>
+      <button class="del" data-action="stage-del" data-i="${i}">${ic.trash}</button>
+    </div>`).join("");
+  $("#sheetBody").innerHTML=`
+    <div class="field"><label>Factory name</label><input id="s_factory" value="${esc(settings.factory)}" maxlength="32" /></div>
+
+    <div class="sub-h">${ic.layers} Workflow stages</div>
+    <div class="hint" style="margin-top:-4px;margin-bottom:12px;">Tap a stage to edit its process steps (and sub-steps inside each).</div>
+    <div>${rows||`<div class="hint">No stages yet. Add one below.</div>`}</div>
+    <div class="add-row"><input id="s_newStage" placeholder="Add a stage (e.g. Quality check)" /><button data-action="stage-add">Add</button></div>
+    <div class="hint">Changes apply to <b>new</b> jobs. Running jobs keep their current steps.</div>
+
+    <div class="toggle-row" data-action="toggle-autolearn">
+      <div style="flex:1;"><div class="tg-t">Smart defaults</div><div class="tg-s">New jobs auto-use your most-repeated process steps. Steps you stop using fade out of the defaults.</div></div>
+      <div class="switch ${settings.autoLearn?"on":""}"><span></span></div>
+    </div>
+
+    <div class="sub-h">Get the app on your phone</div>
+    <button class="btn btn-soft" data-action="home-help">${ic.share} Add to Home Screen</button>
+
+    <div class="sub-h">Your data &amp; backup</div>
+    <div class="info-card">All your data is saved <b>only on this device</b>, inside this browser/app — nothing is uploaded to any server. Keep a backup so you never lose it, or to move it to another phone.</div>
+    <div class="btn-row"><button class="btn btn-primary" data-action="export-data">Save backup</button><button class="btn btn-soft" data-action="import-data">Restore</button></div>
+
+    <button class="btn btn-amber" data-action="save-settings" style="margin-top:20px;">Done</button>`;
+}
+function stageEditor(i){
+  const st=settings.stages[i]; if(!st)return;
+  editStageIdx=i; editStepIdx=null; st.steps=st.steps||[];
+  openSheet("Edit stage");
+  const rows=st.steps.map((p,k)=>`
+    <div class="stg-item">
+      <div class="num">${k+1}</div>
+      <div class="n" data-action="tstep-open" data-i="${i}" data-k="${k}" style="cursor:pointer;">${esc(p.name)}
+        <div class="sub">${(p.subs&&p.subs.length)?`${p.subs.length} sub-step${p.subs.length>1?"s":""} ›`:"Add sub-steps ›"}</div></div>
+      <button data-action="tstep-up" data-k="${k}" ${k===0?"disabled":""}>${ic.up}</button>
+      <button data-action="tstep-down" data-k="${k}" ${k===st.steps.length-1?"disabled":""}>${ic.down}</button>
+      <button class="del" data-action="tstep-del" data-k="${k}">${ic.trash}</button>
+    </div>`).join("");
+  const tpresent=new Set((st.steps||[]).map(p=>(p.name||"").trim()));
+  const tsuggest=stepUsage(st.name).filter(u=>!tpresent.has(u.name)).slice(0,6);
+  const tsugHtml=tsuggest.length?`<div class="suggest"><div class="suggest-h">Used often in real jobs — tap to add</div><div class="suggest-chips">${tsuggest.map(u=>`<button class="sg-chip" data-action="tstep-suggest" data-name="${esc(u.name)}">${esc(u.name)} <span>${u.count}×</span></button>`).join("")}</div></div>`:"";
+  $("#sheetBody").innerHTML=`
+    <div class="subhead"><button class="backbtn" data-action="settings">${ic.back}</button><span class="t">Stage settings</span></div>
+    <div class="field"><label>Stage name</label><input id="s_stageName" value="${esc(st.name)}" /></div>
+    <div class="sub-h">Process steps</div>
+    <div class="hint" style="margin-top:-4px;margin-bottom:12px;">Default checklist for new jobs. Tap a step to add sub-steps.${settings.autoLearn?` <b>Smart defaults are ON</b> — new jobs use your most-repeated steps automatically.`:""}</div>
+    <div>${rows||`<div class="hint">No steps yet. Add one below.</div>`}</div>
+    ${tsugHtml}
+    <div class="add-row"><input id="t_newStep" placeholder="Add a step (e.g. Cutting)" /><button data-action="tstep-add">Add</button></div>
+    <button class="btn btn-primary" data-action="settings" style="margin-top:18px;">Done</button>`;
+}
+function tstepEditor(i,k){
+  const st=settings.stages[i]; if(!st)return;
+  const p=st.steps[k]; if(!p)return;
+  editStageIdx=i; editStepIdx=k; p.subs=p.subs||[];
+  openSheet("Edit sub-steps");
+  const rows=p.subs.map((name,m)=>`
+    <div class="stg-item">
+      <div class="num">${m+1}</div>
+      <div class="n">${esc(name)}</div>
+      <button data-action="tsub-up" data-m="${m}" ${m===0?"disabled":""}>${ic.up}</button>
+      <button data-action="tsub-down" data-m="${m}" ${m===p.subs.length-1?"disabled":""}>${ic.down}</button>
+      <button class="del" data-action="tsub-del" data-m="${m}">${ic.trash}</button>
+    </div>`).join("");
+  $("#sheetBody").innerHTML=`
+    <div class="subhead"><button class="backbtn" data-action="stage-edit" data-i="${i}">${ic.back}</button><span class="t">${esc(p.name)}</span></div>
+    <div class="field"><label>Step name</label><input id="t_stepName" value="${esc(p.name)}" /></div>
+    <div class="sub-h">Sub-steps</div>
+    <div class="hint" style="margin-top:-4px;margin-bottom:12px;">Smaller stages inside this step.</div>
+    <div>${rows||`<div class="hint">No sub-steps yet. Add one below.</div>`}</div>
+    <div class="add-row"><input id="t_newSub" placeholder="Add a sub-step" /><button data-action="tsub-add">Add</button></div>
+    <button class="btn btn-primary" data-action="stage-edit" data-i="${i}" style="margin-top:18px;">Done</button>`;
+}
+
+/* Add to Home Screen help */
+function homeHelp(){
+  openSheet("Add to Home Screen");
+  const ios=isiOS();
+  $("#sheetBody").innerHTML=`
+    <div class="info-card" style="margin-bottom:14px;">${ios
+      ? `On your <b>iPhone</b>, this opens like a real app from your home screen.`
+      : `Add this to your phone's home screen to open it like an app.`}</div>
+    ${ios?`
+    <div class="sub-h">Steps on iPhone (use Safari)</div>
+    <div class="info-card">
+      <b>1.</b> Open this page in <b>Safari</b> (not inside another app).<br/><br/>
+      <b>2.</b> Tap the <b>Share</b> button ${ic.share} at the bottom of Safari.<br/><br/>
+      <b>3.</b> Scroll down and tap <b>“Add to Home Screen”</b>.<br/><br/>
+      <b>4.</b> Tap <b>Add</b> — the “Factory Floor” icon appears on your home screen.
+    </div>
+    <div class="hint">Note: phones don't allow a website to add itself automatically — these few taps do it once, then it stays.</div>
+    `:`
+    <div class="sub-h">Steps on Android (Chrome)</div>
+    <div class="info-card">
+      <b>1.</b> Tap the <b>⋮</b> menu (top-right) in Chrome.<br/><br/>
+      <b>2.</b> Tap <b>“Add to Home screen”</b> / <b>“Install app”</b>.<br/><br/>
+      <b>3.</b> Confirm <b>Add</b>.
+    </div>`}
+    <button class="btn btn-primary" data-action="close" style="margin-top:18px;">Got it</button>`;
+}
+
+/* ===== Mutations ===== */
+async function saveWorkers(){ await Store.set("workers",workers); }
+async function saveJobs(){ await Store.set("jobs",jobs); }
+async function saveSettingsStore(){ await Store.set("settings",settings); }
+
+async function saveWorker(id){
+  const name=$("#f_name").value.trim(); if(!name){toast("Worker name is required");return;}
+  const data={name,skill:$("#f_skill").value.trim(),phone:$("#f_phone").value.trim()};
+  if(id)Object.assign(workers.find(x=>x.id===id),data); else workers.push({id:uid(),...data,createdAt:Date.now()});
+  await saveWorkers(); closeSheet(); render(); toast(id?"Worker updated":"Worker added");
+}
+async function deleteWorker(id){
+  if(!(await uiConfirm("Remove this worker? Their stage assignments will be cleared.","Remove","Cancel")))return;
+  workers=workers.filter(w=>w.id!==id);
+  jobs.forEach(j=>(j.stages||[]).forEach(s=>{ if(s.workerId===id)s.workerId=""; }));
+  await saveWorkers(); await saveJobs(); closeSheet(); render(); toast("Worker removed");
+}
+/* ===== Smart defaults: learn from repeated process steps ===== */
+function stepUsage(stageName){
+  // count distinct jobs that used each step name within stages of this name
+  const counts={};
+  jobs.forEach(j=>(j.stages||[]).forEach(s=>{
+    if(s.name!==stageName)return;
+    const seen=new Set();
+    (s.steps||[]).forEach(p=>{ const n=(p.name||"").trim(); if(n&&!seen.has(n)){ seen.add(n); counts[n]=(counts[n]||0)+1; } });
+  }));
+  return Object.keys(counts).map(n=>({name:n,count:counts[n]})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+}
+function learnedNames(stageName){ return stepUsage(stageName).filter(u=>u.count>=2).slice(0,8).map(u=>u.name); }
+function subsForName(stageName,name){
+  const st=settings.stages.find(s=>s.name===stageName); const p=st&&(st.steps||[]).find(x=>x.name===name);
+  return p&&Array.isArray(p.subs)?p.subs.slice():[];
+}
+function stepNamesForNewStage(st){
+  if(settings.autoLearn){
+    const learned=learnedNames(st.name);
+    if(learned.length) return learned.map(n=>({name:n, subs:subsForName(st.name,n)}));
+  }
+  return (st.steps||[]).map(p=>({name:p.name, subs:(p.subs||[]).slice()}));
+}
+function newStagesFromTemplate(){
+  return settings.stages.map(st=>({ id:uid(), name:st.name, workerId:"", done:false, qtyDone:0, startedAt:null, doneAt:null,
+    steps:stepNamesForNewStage(st).map(p=>({ id:uid(), name:p.name, done:false, doneAt:null,
+      subs:(p.subs||[]).map(n=>({id:uid(),name:n,done:false,doneAt:null})) })) }));
+}
+async function saveJob(id){
+  const title=$("#f_title").value.trim(); if(!title){toast("Job name is required");return;}
+  const qv=parseInt($("#f_qty").value,10); const qty=(qv&&qv>1)?qv:1;
+  const data={ title, client:$("#f_client").value.trim(), site:$("#f_site").value.trim(), qty,
+    start:$("#f_start").value||todayISO(), due:$("#f_due").value, notes:$("#f_notes").value.trim() };
+  if(id){ const j=jobs.find(x=>x.id===id); Object.assign(j,data);
+    (j.stages||[]).forEach(s=>{ if(s.qtyDone==null)s.qtyDone=0; if(s.qtyDone>qty)s.qtyDone=qty; }); recompute(j); }
+  else { const j={ id:uid(), ...data, stages:newStagesFromTemplate(), status:"active", pauses:[], createdAt:Date.now() }; recompute(j); jobs.push(j); }
+  await saveJobs(); closeSheet(); render(); toast(id?"Job updated":"Job created");
+}
+async function deleteJob(id){
+  if(!(await uiConfirm("Delete this job permanently?","Delete","Cancel")))return;
+  jobs=jobs.filter(j=>j.id!==id); await saveJobs(); closeSheet(); render(); toast("Job deleted");
+}
+async function assignStage(jobId,sid,workerId){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid); if(!s)return;
+  s.workerId=workerId; await saveJobs(); jobDetail(jobId);
+}
+async function setStageQty(jobId,sid,val){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const idx=j.stages.findIndex(s=>s.id===sid); if(idx<0)return;
+  const s=j.stages[idx], q=jobQty(j);
+  const up=stageUpstream(j,idx), downMin=idx<j.stages.length-1?(j.stages[idx+1].qtyDone||0):0;
+  let v=Math.round(val); v=Math.max(downMin,Math.min(up,Math.min(q,Math.max(0,v))));
+  s.qtyDone=v; recompute(j); await saveJobs(); jobDetail(jobId);
+}
+async function qtyInc(jobId,sid,by){ const j=jobs.find(x=>x.id===jobId); const s=j&&j.stages.find(s=>s.id===sid); if(!s)return; setStageQty(jobId,sid,(s.qtyDone||0)+by); }
+async function qtyAll(jobId,sid){ const j=jobs.find(x=>x.id===jobId); const idx=j&&j.stages.findIndex(s=>s.id===sid); if(idx<0)return; setStageQty(jobId,sid,stageUpstream(j,idx)); }
+async function toggleStep(jobId,sid,pid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid), p=s&&s.steps.find(p=>p.id===pid); if(!p)return;
+  p.done=!p.done; recompute(j); await saveJobs(); jobDetail(jobId);
+}
+async function toggleSub(jobId,sid,pid,subid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid), p=s&&s.steps.find(p=>p.id===pid), sub=p&&p.subs.find(x=>x.id===subid); if(!sub)return;
+  sub.done=!sub.done; recompute(j); await saveJobs(); jobDetail(jobId);
+}
+async function markStageDone(jobId,sid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid); if(!s)return;
+  s.done=true; recompute(j); await saveJobs(); jobDetail(jobId);
+}
+async function reopenStage(jobId,sid){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const idx=j.stages.findIndex(s=>s.id===sid); if(idx<0)return;
+  for(let k=idx;k<j.stages.length;k++){ const s=j.stages[k];
+    if(stageHasSteps(s)) s.steps.forEach(p=>{ p.done=false; (p.subs||[]).forEach(x=>x.done=false); }); else s.done=false;
+  }
+  recompute(j); await saveJobs(); jobDetail(jobId);
+}
+async function deliverJob(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  if(isPaused(j))j.pauses[j.pauses.length-1].to=Date.now();
+  j.status="delivered"; j.deliveredOn=$("#d_date").value||todayISO(); j.deliveredNote=($("#d_note").value||"").trim();
+  await saveJobs(); closeSheet(); render(); toast("Delivery recorded ✓");
+}
+async function reopenJob(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  j.status="active"; j.deliveredOn=""; j.deliveredNote=""; await saveJobs(); jobDetail(id);
+}
+async function pauseJob(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  if(!Array.isArray(j.pauses))j.pauses=[];
+  if(!isPaused(j)){ j.pauses.push({from:Date.now(),to:null}); }
+  await saveJobs(); jobDetail(id); toast("Job paused — day count on hold");
+}
+async function resumeJob(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  if(isPaused(j)){ j.pauses[j.pauses.length-1].to=Date.now(); }
+  await saveJobs(); jobDetail(id); toast("Job resumed");
+}
+
+/* per-job step/sub CRUD */
+function curJobStage(){ const j=jobs.find(x=>x.id===editJobId); return [j, j&&j.stages.find(s=>s.id===editSid)]; }
+async function jobStepAdd(){ const v=$("#j_newStep").value.trim(); if(!v)return; const [j,s]=curJobStage(); if(!s)return; s.steps=s.steps||[]; s.steps.push({id:uid(),name:v,done:false,doneAt:null,subs:[]}); recompute(j); await saveJobs(); jobStepEditor(editJobId,editSid); }
+async function jobStepSuggest(name){ const [j,s]=curJobStage(); if(!s)return; s.steps=s.steps||[]; if(s.steps.some(p=>p.name===name))return; s.steps.push({id:uid(),name,done:false,doneAt:null,subs:subsForName(s.name,name).map(n=>({id:uid(),name:n,done:false,doneAt:null}))}); recompute(j); await saveJobs(); jobStepEditor(editJobId,editSid); }
+async function jobStepDel(k){ const [j,s]=curJobStage(); if(!s)return; s.steps.splice(k,1); recompute(j); await saveJobs(); jobStepEditor(editJobId,editSid); }
+async function jobStepMove(k,d){ const [j,s]=curJobStage(); if(!s)return; const t=k+d; if(t<0||t>=s.steps.length)return; [s.steps[k],s.steps[t]]=[s.steps[t],s.steps[k]]; await saveJobs(); jobStepEditor(editJobId,editSid); }
+function curJobStep(){ const [j,s]=curJobStage(); return [j,s, s&&s.steps.find(p=>p.id===editPid)]; }
+async function jobSubAdd(){ const v=$("#j_newSub").value.trim(); if(!v)return; const [j,s,p]=curJobStep(); if(!p)return; p.subs=p.subs||[]; p.subs.push({id:uid(),name:v,done:false,doneAt:null}); recompute(j); await saveJobs(); jobSubEditor(editJobId,editSid,editPid); }
+async function jobSubDel(k){ const [j,s,p]=curJobStep(); if(!p)return; p.subs.splice(k,1); recompute(j); await saveJobs(); jobSubEditor(editJobId,editSid,editPid); }
+async function jobSubMove(k,d){ const [j,s,p]=curJobStep(); if(!p)return; const t=k+d; if(t<0||t>=p.subs.length)return; [p.subs[k],p.subs[t]]=[p.subs[t],p.subs[k]]; await saveJobs(); jobSubEditor(editJobId,editSid,editPid); }
+
+/* template CRUD */
+async function stageAdd(){ const v=$("#s_newStage").value.trim(); if(!v)return; settings.stages.push({name:v,steps:[]}); await saveSettingsStore(); settingsForm(); }async function stageDel(i){ if(settings.stages.length<=1){toast("Keep at least one stage");return;} settings.stages.splice(i,1); await saveSettingsStore(); settingsForm(); }
+async function stageMove(i,d){ const t=i+d; if(t<0||t>=settings.stages.length)return; [settings.stages[i],settings.stages[t]]=[settings.stages[t],settings.stages[i]]; await saveSettingsStore(); settingsForm(); }
+async function stageRename(){ const v=$("#s_stageName").value.trim(); if(!v)return; settings.stages[editStageIdx].name=v; await saveSettingsStore(); }
+async function tstepAdd(){ const v=$("#t_newStep").value.trim(); if(!v)return; const st=settings.stages[editStageIdx]; st.steps=st.steps||[]; st.steps.push({name:v,subs:[]}); await saveSettingsStore(); stageEditor(editStageIdx); }
+async function tstepSuggest(name){ const st=settings.stages[editStageIdx]; st.steps=st.steps||[]; if(st.steps.some(p=>p.name===name))return; st.steps.push({name,subs:[]}); await saveSettingsStore(); stageEditor(editStageIdx); }
+async function toggleAutoLearn(){ settings.autoLearn=!settings.autoLearn; await saveSettingsStore(); settingsForm(); toast(settings.autoLearn?"Smart defaults ON":"Smart defaults OFF"); }
+async function tstepDel(k){ const st=settings.stages[editStageIdx]; st.steps.splice(k,1); await saveSettingsStore(); stageEditor(editStageIdx); }
+async function tstepMove(k,d){ const st=settings.stages[editStageIdx]; const t=k+d; if(t<0||t>=st.steps.length)return; [st.steps[k],st.steps[t]]=[st.steps[t],st.steps[k]]; await saveSettingsStore(); stageEditor(editStageIdx); }
+async function tstepRename(){ const v=$("#t_stepName").value.trim(); if(!v)return; settings.stages[editStageIdx].steps[editStepIdx].name=v; await saveSettingsStore(); }
+async function tsubAdd(){ const v=$("#t_newSub").value.trim(); if(!v)return; const p=settings.stages[editStageIdx].steps[editStepIdx]; p.subs=p.subs||[]; p.subs.push(v); await saveSettingsStore(); tstepEditor(editStageIdx,editStepIdx); }
+async function tsubDel(m){ const p=settings.stages[editStageIdx].steps[editStepIdx]; p.subs.splice(m,1); await saveSettingsStore(); tstepEditor(editStageIdx,editStepIdx); }
+async function tsubMove(m,d){ const p=settings.stages[editStageIdx].steps[editStepIdx]; const t=m+d; if(t<0||t>=p.subs.length)return; [p.subs[m],p.subs[t]]=[p.subs[t],p.subs[m]]; await saveSettingsStore(); tstepEditor(editStageIdx,editStepIdx); }
+
+async function saveSettings(){ const f=$("#s_factory").value.trim()||"My Factory"; settings.factory=f; $("#brandName").value=f; await saveSettingsStore(); closeSheet(); render(); toast("Settings saved"); }
+
+/* backup */
+function exportData(){
+  try{
+    const data={app:"factory-floor",version:4,exportedAt:new Date().toISOString(),settings,workers,jobs};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="factory-backup-"+todayISO()+".json";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+    toast("Backup file created");
+  }catch(e){ toast("Could not create backup"); }
+}
+function importData(){ $("#importFile").value=""; $("#importFile").click(); }
+async function handleImport(file){
+  const r=new FileReader();
+  r.onload=async ()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d||!Array.isArray(d.jobs)||!Array.isArray(d.workers)) throw new Error("bad");
+      if(!(await uiConfirm("Replace ALL current data with this backup?","Replace","Cancel")))return;
+      workers=d.workers; jobs=d.jobs; settings=d.settings||settings;
+      migrateSettings(); migrateJobs();
+      await saveWorkers(); await saveJobs(); await saveSettingsStore();
+      $("#brandName").value=settings.factory||"My Factory";
+      closeSheet(); render(); toast("Backup restored");
+    }catch(e){ toast("That file could not be read"); }
+  };
+  r.readAsText(file);
+}
+
+/* ===== Tabs / render ===== */
+function render(){
+  if(activeTab==="dashboard")renderDashboard();
+  else if(activeTab==="jobs")renderJobs();
+  else renderTeam();
+  ["dashboard","jobs","team"].forEach(t=>$("#tab-"+t).classList.toggle("on",t===activeTab));
+  const fab=$("#fab"),lbl=$("#fabLabel");
+  if(activeTab==="team"){lbl.textContent="Add worker";fab.style.display="flex";}
+  else if(activeTab==="jobs"){lbl.textContent="New job";fab.style.display="flex";}
+  else fab.style.display="none";
+}
+function setTab(t){ activeTab=t; render(); }
+
+/* ===== Events ===== */
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-action]"); if(!el)return;
+  const a=el.dataset.action,id=el.dataset.id;
+  const k=el.dataset.k!=null?parseInt(el.dataset.k,10):null;
+  const iI=el.dataset.i!=null?parseInt(el.dataset.i,10):null;
+  const m=el.dataset.m!=null?parseInt(el.dataset.m,10):null;
+  switch(a){
+    case "tab": setTab(el.dataset.tab); break;
+    case "filter": jobFilter=el.dataset.f; renderJobs(); break;
+    case "close": closeSheet(); break;
+    case "settings": settingsForm(); break;
+    case "fab": activeTab==="team"?workerForm():jobForm(); break;
+    case "edit-worker": workerForm(workers.find(w=>w.id===id)); break;
+    case "save-worker": saveWorker(id); break;
+    case "delete-worker": deleteWorker(id); break;
+    case "edit-job": jobForm(jobs.find(j=>j.id===id)); break;
+    case "save-job": saveJob(id); break;
+    case "delete-job": deleteJob(id); break;
+    case "open-job": jobDetail(id); break;
+    case "toggle-step": toggleStep(id,el.dataset.sid,el.dataset.pid); break;
+    case "toggle-sub": toggleSub(id,el.dataset.sid,el.dataset.pid,el.dataset.subid); break;
+    case "mark-stage-done": markStageDone(id,el.dataset.sid); break;
+    case "qty-inc": qtyInc(id,el.dataset.sid,1); break;
+    case "qty-dec": qtyInc(id,el.dataset.sid,-1); break;
+    case "qty-inc10": qtyInc(id,el.dataset.sid,10); break;
+    case "qty-all": qtyAll(id,el.dataset.sid); break;
+    case "reopen-stage": reopenStage(id,el.dataset.sid); break;
+    case "job-step-edit": jobStepEditor(id,el.dataset.sid); break;
+    case "job-step-open": jobSubEditor(id,el.dataset.sid,el.dataset.pid); break;
+    case "jstep-add": jobStepAdd(); break;
+    case "jstep-suggest": jobStepSuggest(el.dataset.name); break;
+    case "jstep-del": jobStepDel(k); break;
+    case "jstep-up": jobStepMove(k,-1); break;
+    case "jstep-down": jobStepMove(k,1); break;
+    case "jsub-add": jobSubAdd(); break;
+    case "jsub-del": jobSubDel(k); break;
+    case "jsub-up": jobSubMove(k,-1); break;
+    case "jsub-down": jobSubMove(k,1); break;
+    case "deliver-job": deliverJob(id); break;
+    case "reopen-job": reopenJob(id); break;
+    case "pause-job": pauseJob(id); break;
+    case "resume-job": resumeJob(id); break;
+    case "worker-detail": workerDetail(id); break;
+    case "stage-edit": stageEditor(iI); break;
+    case "stage-add": stageAdd(); break;
+    case "stage-del": stageDel(iI); break;
+    case "stage-up": stageMove(iI,-1); break;
+    case "stage-down": stageMove(iI,1); break;
+    case "tstep-open": tstepEditor(iI,k); break;
+    case "tstep-add": tstepAdd(); break;
+    case "tstep-suggest": tstepSuggest(el.dataset.name); break;
+    case "toggle-autolearn": toggleAutoLearn(); break;
+    case "tstep-del": tstepDel(k); break;
+    case "tstep-up": tstepMove(k,-1); break;
+    case "tstep-down": tstepMove(k,1); break;
+    case "tsub-add": tsubAdd(); break;
+    case "tsub-del": tsubDel(m); break;
+    case "tsub-up": tsubMove(m,-1); break;
+    case "tsub-down": tsubMove(m,1); break;
+    case "save-settings": saveSettings(); break;
+    case "home-help": homeHelp(); break;
+    case "export-data": exportData(); break;
+    case "import-data": importData(); break;
+  }
+});
+document.addEventListener("change",e=>{
+  if(e.target.classList.contains("stage-worker")) assignStage(e.target.dataset.id,e.target.dataset.sid,e.target.value);
+  else if(e.target.id==="s_stageName") stageRename();
+  else if(e.target.id==="t_stepName") tstepRename();
+});
+$("#brandName").addEventListener("change",async e=>{ settings.factory=e.target.value.trim()||"My Factory"; e.target.value=settings.factory; await saveSettingsStore(); });
+$("#importFile").addEventListener("change",e=>{ const f=e.target.files&&e.target.files[0]; if(f)handleImport(f); });
+
+/* ===== Migration ===== */
+function migrateSettings(){
+  if(!settings||typeof settings!=="object")settings={factory:"My Factory",stages:defaultStages()};
+  if(!settings.factory)settings.factory="My Factory";
+  if(!Array.isArray(settings.stages))settings.stages=[];
+  settings.stages=settings.stages.map(st=>{
+    if(typeof st==="string")st={name:st,steps:[]};
+    const steps=(Array.isArray(st.steps)?st.steps:[]).map(p=>{
+      if(typeof p==="string")return {name:p,subs:[]};
+      return {name:p.name||"Step", subs:Array.isArray(p.subs)?p.subs.map(x=>typeof x==="string"?x:(x&&x.name)||"").filter(Boolean):[]};
+    });
+    return {name:st.name||"Stage",steps};
+  });
+  if(!settings.stages.length)settings.stages=defaultStages();
+  if(typeof settings.autoLearn!=="boolean")settings.autoLearn=false;
+}
+function migrateJobs(){
+  jobs.forEach(j=>{
+    if(!Array.isArray(j.stages)){
+      j.stages=settings.stages.map((t,i)=>({ id:uid(),name:t.name,workerId:(i===0?(j.workerId||""):""),done:false,startedAt:null,doneAt:null,
+        steps:(t.steps||[]).map(p=>({id:uid(),name:p.name,done:false,doneAt:null,subs:(p.subs||[]).map(n=>({id:uid(),name:n,done:false,doneAt:null}))})) }));
+      const wasDone=(j.progress||0)>=100||j.status==="completed"||j.status==="delivered";
+      if(wasDone)j.stages.forEach(s=>{ s.done=true; (s.steps||[]).forEach(p=>{ p.done=true; (p.subs||[]).forEach(x=>x.done=true); }); });
+      delete j.progress; delete j.workerId;
+    } else {
+      j.stages.forEach(s=>{
+        if(!s.id)s.id=uid(); if(s.workerId==null)s.workerId=""; if(s.startedAt===undefined)s.startedAt=null; if(s.doneAt===undefined)s.doneAt=null; if(s.qtyDone==null)s.qtyDone=0;
+        if(!Array.isArray(s.steps)){
+          const t=settings.stages.find(t=>t.name===s.name);
+          s.steps=(t&&t.steps.length)?t.steps.map(p=>({id:uid(),name:p.name,done:!!s.done,doneAt:null,subs:(p.subs||[]).map(n=>({id:uid(),name:n,done:!!s.done,doneAt:null}))})):[];
+        } else {
+          s.steps.forEach(p=>{ if(!p.id)p.id=uid(); if(p.done==null)p.done=false; if(p.doneAt===undefined)p.doneAt=null;
+            if(!Array.isArray(p.subs))p.subs=[]; p.subs.forEach(x=>{ if(!x.id)x.id=uid(); if(x.done==null)x.done=false; if(x.doneAt===undefined)x.doneAt=null; }); });
+        }
+      });
+    }
+    if(j.status==="completed")j.status="active";
+    if(!Array.isArray(j.pauses))j.pauses=[];
+    if(j.qty==null)j.qty=1;
+    (j.stages||[]).forEach(s=>{ if(s.qtyDone==null)s.qtyDone=0; });
+    recompute(j);
+  });
+}
+(async function init(){
+  workers=await Store.get("workers",[]);
+  jobs=await Store.get("jobs",[]);
+  settings=await Store.get("settings",{factory:"My Factory",stages:defaultStages()});
+  migrateSettings(); migrateJobs();
+  await saveSettingsStore(); await saveJobs();
+  $("#brandName").value=settings.factory||"My Factory";
+  render();
+})();
+</script>
+</body>
+</html>

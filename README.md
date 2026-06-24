@@ -14,6 +14,7 @@ quantity-wise, and record delivery to the client.
 - Team performance dashboard with rankings and analysis charts
 - Backup / restore your data
 - Smart defaults that learn from your most-repeated process steps
+- In-app "Update app" button to always get the latest version
 
 ## 📱 Works on iPhone and Android
 The app runs on **iPhone and other phones (Android) too**. Open the live link and add it
@@ -25,8 +26,13 @@ to your home screen to use it like a normal app:
 ## 🔒 Your data is private and safe
 Whoever uses this app, **their data is saved only on their own phone** (inside that phone's
 browser). It is **not uploaded to any server** and no one else can see it. Each phone keeps
-its own data. Because of this, please use **Settings → Save backup** every now and then to
-keep a copy of your data (and to move it to another phone if needed).
+its own data. Please use **Settings → Save backup** every now and then to keep a copy of your
+data (and to move it to another phone if needed).
+
+## ☁️ Coming soon — Cloud Sync & Backup
+An optional **Cloud Sync & Backup** plan is being explored (planned at **$2/month**) so your
+data can be backed up online and used on more than one phone. If you'd like it, tap
+**"I'm interested"** on the app's Overview screen.
 
 ## Suggestions or changes?
 If you'd like any change or new feature, please **open an Issue** in the

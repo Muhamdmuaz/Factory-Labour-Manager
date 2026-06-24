@@ -169,6 +169,7 @@
   .qbtn:active{filter:brightness(.95);}
   .qbtn:disabled{opacity:.35;}
   .qty-num{min-width:54px;text-align:center;font-size:22px;font-weight:800;letter-spacing:-.5px;}
+  .qty-proc-label{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--steel);}
   .qty-pill{font-size:12px;font-weight:800;background:var(--amber-soft);color:#9A5803;border-radius:6px;padding:1px 7px;vertical-align:middle;}
   .confirm-scrim{position:fixed;inset:0;background:rgba(22,25,29,.5);z-index:70;display:none;align-items:center;justify-content:center;padding:28px;}
   .confirm-scrim.show{display:flex;}
@@ -374,7 +375,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="2026-06-23.6";
+const APP_VERSION="2026-06-23.7";
 /* Cloud Sync interest — set your WhatsApp number (international, e.g. 923001234567) to receive interest messages. Leave empty to just show a thank-you. */
 const CLOUD_WHATSAPP="923018427020";
 const CLOUD_PRICE="$2/month";
@@ -937,6 +938,14 @@ function qtyStageContent(j,s,i,readonly){
       ${q>=20?`<button class="qbtn wide" data-action="qty-inc10" data-id="${j.id}" data-sid="${s.id}" ${canInc?"":"disabled"}>+10</button>`:""}
       <button class="qbtn wide" data-action="qty-all" data-id="${j.id}" data-sid="${s.id}" ${done<up?"":"disabled"}>All ${up}</button>
     </div>`;
+  }
+  // process steps (also shown in quantity mode)
+  if(readonly){
+    if(stageHasSteps(s)){ html+=`<div class="qty-proc-label">Process</div>`+stepsReadonly(s); }
+  } else {
+    html+=`<div class="qty-proc-label">Process steps</div>`;
+    if(stageHasSteps(s)) html+=stepsInteractive(j,s);
+    else html+=`<button class="linkbtn" data-action="job-step-edit" data-id="${j.id}" data-sid="${s.id}">${ic.pen} Add process steps</button>`;
   }
   return html;
 }

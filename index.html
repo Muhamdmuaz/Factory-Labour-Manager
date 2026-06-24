@@ -56,6 +56,8 @@
   .cloud-card .cc-sub{font-size:13px;color:#C7CBD1;line-height:1.5;margin-top:6px;}
   .cloud-card .cc-sub b{color:#fff;}
   .cloud-card .cc-btn{margin-top:14px;width:100%;padding:13px;border-radius:12px;background:var(--amber);color:#16191D;font-weight:800;font-size:14.5px;}
+  .cloud-card .cc-count{margin-top:12px;font-size:13px;color:#fff;background:rgba(255,255,255,.08);border-radius:10px;padding:9px 12px;}
+  .cloud-card .cc-count b{color:var(--amber);font-size:15px;}
   .cloud-card .cc-btn:active{filter:brightness(.95);}
 
   .section-h{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 12px;}
@@ -372,10 +374,14 @@
 
 <script>
 "use strict";
-const APP_VERSION="2026-06-23.5";
+const APP_VERSION="2026-06-23.6";
 /* Cloud Sync interest — set your WhatsApp number (international, e.g. 923001234567) to receive interest messages. Leave empty to just show a thank-you. */
 const CLOUD_WHATSAPP="923018427020";
 const CLOUD_PRICE="$2/month";
+/* Live interest counter (free, no account — Abacus). */
+const COUNTER_BASE="https://abacus.jasoncameron.dev";
+const COUNTER_NS="flm-muaz-7q2x";
+const COUNTER_KEY="cloud-interest";
 
 /* ===== Storage: window.storage (Claude) -> localStorage (device) -> memory ===== */
 const Store = {
@@ -617,8 +623,10 @@ function renderDashboard(){
       <div class="cc-top">${ic.cloud}<span class="cc-soon">Coming soon</span></div>
       <div class="cc-title">Cloud Sync &amp; Backup</div>
       <div class="cc-sub">Keep your data backed up in the cloud and use it on more than one phone. Planned at <b>${CLOUD_PRICE}</b>.</div>
+      <div class="cc-count" id="ccCount" style="display:none"></div>
       <button class="cc-btn" data-action="cloud-interest">I'm interested</button>
     </div>`;
+  loadCloudCount();
 }
 function emptyInline(h,p){ return `<div class="card" style="text-align:center;color:var(--steel);box-shadow:none;"><div style="font-weight:700;color:var(--ink);margin-bottom:3px;">${esc(h)}</div><div style="font-size:13px;">${esc(p)}</div></div>`; }
 
@@ -1287,10 +1295,33 @@ async function updateApp(){
     setTimeout(()=>{ location.replace(base+"?u="+Date.now()); }, 350);
   }catch(e){ location.reload(); }
 }
+function counterUrl(kind){ return COUNTER_BASE+"/"+kind+"/"+COUNTER_NS+"/"+COUNTER_KEY; }
+async function fetchCount(hit){
+  try{
+    const r=await fetch(counterUrl(hit?"hit":"get"));
+    if(!r.ok)return null;
+    const d=await r.json();
+    const v=typeof d.value==="number"?d.value:parseInt(d.value,10);
+    return isNaN(v)?null:v;
+  }catch(e){ return null; }
+}
+function setCountDisplay(n){
+  const el=document.getElementById("ccCount"); if(!el)return;
+  if(n==null){ el.style.display="none"; return; }
+  el.style.display="block";
+  el.innerHTML=`<b>${n}</b> ${n===1?"person has":"people have"} shown interest`;
+}
+async function loadCloudCount(){ const n=await fetchCount(false); if(n!=null)setCountDisplay(n); }
 function cloudInterest(){
   const msg=encodeURIComponent("Hi! I'm interested in Cloud Sync & Backup for the Factory Labour Manager app ("+CLOUD_PRICE+"). Please let me know when it's available.");
   if(CLOUD_WHATSAPP){ try{ window.open("https://wa.me/"+CLOUD_WHATSAPP+"?text="+msg,"_blank"); }catch(e){ toast("Thanks! Your interest is noted."); } }
   else { toast("Thanks! Your interest is noted — cloud sync is coming soon."); }
+  (async()=>{
+    let voted=false; try{ voted=localStorage.getItem("ff_cloud_voted")==="1"; }catch(e){}
+    const n=await fetchCount(!voted);
+    if(!voted){ try{ localStorage.setItem("ff_cloud_voted","1"); }catch(e){} }
+    if(n!=null)setCountDisplay(n);
+  })();
 }
 
 /* backup */

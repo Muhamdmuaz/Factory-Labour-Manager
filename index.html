@@ -170,6 +170,8 @@
   .qbtn:disabled{opacity:.35;}
   .qty-num{min-width:54px;text-align:center;font-size:22px;font-weight:800;letter-spacing:-.5px;}
   .qty-proc-label{margin-top:14px;padding-top:13px;border-top:1px solid var(--line);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--steel);}
+  .step-wrap{margin-bottom:10px;}
+  .step-wrap .step-worker{margin-top:5px;width:100%;font-size:12.5px;padding:7px 10px;border:1px dashed var(--line);border-radius:9px;background:#FBFAF7;color:var(--ink-2);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237A8088' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 10px center;}
   .qty-pill{font-size:12px;font-weight:800;background:var(--amber-soft);color:#9A5803;border-radius:6px;padding:1px 7px;vertical-align:middle;}
   .confirm-scrim{position:fixed;inset:0;background:rgba(22,25,29,.5);z-index:70;display:none;align-items:center;justify-content:center;padding:28px;}
   .confirm-scrim.show{display:flex;}
@@ -375,7 +377,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="2026-06-23.7";
+const APP_VERSION="2026-06-23.8";
 /* Cloud Sync interest — set your WhatsApp number (international, e.g. 923001234567) to receive interest messages. Leave empty to just show a thank-you. */
 const CLOUD_WHATSAPP="923018427020";
 const CLOUD_PRICE="$2/month";
@@ -694,13 +696,18 @@ function workerStats(){
   const stats=workers.map(w=>{
     let steps=0,stages=0,active=0,durTotal=0,durCount=0; const jset=new Set();
     jobs.forEach(j=>(j.stages||[]).forEach(s=>{
-      if(s.workerId!==w.id)return; jset.add(j.id);
-      if(isQtyJob(j)) steps+=(s.qtyDone||0);
-      else if(stageHasSteps(s)) s.steps.forEach(p=>{ if(stepHasSubs(p))steps+=p.subs.filter(x=>x.done).length; else steps+=stepDone(p)?1:0; });
-      else steps+=s.done?1:0;
-      const sd=stageComplete(j,s);
-      if(sd){ stages++; if(s.startedAt&&s.doneAt&&s.doneAt>=s.startedAt){ const d=(s.doneAt-s.startedAt)-pausedOverlapMs(j,s.startedAt,s.doneAt); if(d>=0){ durTotal+=d; durCount++; } } }
-      if(jobStatus(j)==="active"&&!sd)active++;
+      const stageMine=s.workerId===w.id;
+      if(isQtyJob(j)){
+        if(stageMine){ jset.add(j.id); steps+=(s.qtyDone||0); }
+      } else if(stageHasSteps(s)){
+        s.steps.forEach(p=>{ if(effWorker(s,p)!==w.id)return; jset.add(j.id);
+          if(stepHasSubs(p))steps+=p.subs.filter(x=>x.done).length; else steps+=stepDone(p)?1:0; });
+      } else if(stageMine){ jset.add(j.id); steps+=s.done?1:0; }
+      if(stageMine){
+        const sd=stageComplete(j,s);
+        if(sd){ stages++; if(s.startedAt&&s.doneAt&&s.doneAt>=s.startedAt){ const d=(s.doneAt-s.startedAt)-pausedOverlapMs(j,s.startedAt,s.doneAt); if(d>=0){ durTotal+=d; durCount++; } } }
+        if(jobStatus(j)==="active"&&!sd)active++;
+      }
     }));
     const avgDays=durCount?(durTotal/durCount/86400000):null;
     return {w,steps,stages,active,jobs:jset.size,avgDays};
@@ -757,21 +764,24 @@ function workerDetail(id){
   const speedLabel={fast:"Fast",ok:"On pace",slow:"Slow",none:"No data yet"};
   const speedCls={fast:"sp-fast",ok:"sp-ok",slow:"sp-slow",none:"sp-none"};
   const fmtAvg=a=>a==null?"—":(Math.round(a*10)/10+" days");
-  // active assignments
-  let activeRows="", doneRows="";
+  // task-level Pending / Done by effective worker (per-task or whole-stage)
+  let pendingRows="", doneRows="", pendingCount=0, doneCount=0;
+  const mkRow=(j,label,kind,meta)=>`<div class="wd-row" data-action="open-job" data-id="${j.id}" style="cursor:pointer;"><span class="dot"${kind==="done"?' style="background:var(--green)"':""}></span><span>${label}</span>${meta?`<span class="meta">${meta}</span>`:""}</div>`;
   jobs.forEach(j=>{
-    const st=jobStatus(j);
+    const st=jobStatus(j), paused=isPaused(j);
     (j.stages||[]).forEach(s=>{
-      if(s.workerId!==id)return;
-      const qmode=isQtyJob(j);
-      const dn=qmode?(s.qtyDone||0):(stageHasSteps(s)?s.steps.filter(stepDone).length:0), tot=qmode?jobQty(j):(stageHasSteps(s)?s.steps.length:0);
-      if(st==="active"&&!stageComplete(j,s)){
-        const tag=isPaused(j)?`<span class="meta" style="color:var(--steel)">paused</span>`:`<span class="meta">${tot?dn+"/"+tot+(qmode?" units":" steps"):"in progress"}</span>`;
-        activeRows+=`<div class="wd-row" data-action="open-job" data-id="${j.id}" style="cursor:pointer;"><span class="dot"></span><span>${esc(j.title)} · ${esc(s.name)}</span>${tag}</div>`;
-      } else if(stageComplete(j,s)){
-        let dtxt="";
-        if(s.startedAt&&s.doneAt){ const d=Math.max(0,Math.round(((s.doneAt-s.startedAt)-pausedOverlapMs(j,s.startedAt,s.doneAt))/86400000)); dtxt=`${d}d`; }
-        doneRows+=`<div class="wd-row" data-action="open-job" data-id="${j.id}" style="cursor:pointer;"><span class="dot" style="background:var(--green)"></span><span>${esc(j.title)} · ${esc(s.name)}</span>${dtxt?`<span class="meta">${dtxt}</span>`:""}</div>`;
+      if(stageHasSteps(s)){
+        s.steps.forEach(p=>{
+          if(effWorker(s,p)!==id)return;
+          const label=`${esc(j.title)} · ${esc(s.name)} · ${esc(p.name)}`;
+          if(stepDone(p)){ doneCount++; doneRows+=mkRow(j,label,"done"); }
+          else if(st!=="delivered"){ pendingCount++; pendingRows+=mkRow(j,label,"pending",paused?"paused":""); }
+        });
+      } else {
+        if(s.workerId!==id)return;
+        const label=`${esc(j.title)} · ${esc(s.name)}`, qmode=isQtyJob(j);
+        if(stageComplete(j,s)){ doneCount++; doneRows+=mkRow(j,label,"done"); }
+        else if(st!=="delivered"){ pendingCount++; pendingRows+=mkRow(j,label,"pending",paused?"paused":(qmode?`${s.qtyDone||0}/${jobQty(j)} units`:"")); }
       }
     });
   });
@@ -790,9 +800,9 @@ function workerDetail(id){
       <div class="wd"><div class="n">${me.active}</div><div class="l">Active tasks now</div></div>
       <div class="wd"><div class="n" style="font-size:18px;">${fmtAvg(me.avgDays)}</div><div class="l">Avg time per stage</div></div>
     </div>
-    <div class="sub-h">Working on now (${activeRows?activeRows.split('wd-row').length-1:0})</div>
-    ${activeRows||`<div class="hint" style="margin-bottom:4px;">No active task assigned.</div>`}
-    ${doneRows?`<div class="sub-h">Completed stages</div>${doneRows}`:""}
+    <div class="sub-h">Pending — kaam karne hain (${pendingCount})</div>
+    ${pendingRows||`<div class="hint" style="margin-bottom:4px;">No pending tasks. All clear 👍</div>`}
+    ${doneRows?`<div class="sub-h">Done — ho gaye (${doneCount})</div>${doneRows}`:""}
     <div class="btn-row"><button class="btn btn-primary" data-action="edit-worker" data-id="${w.id}">Edit details</button>
       <button class="btn btn-soft" data-action="close">Close</button></div>`;
 }
@@ -846,12 +856,21 @@ function jobForm(j){
 function stageWorkerSelect(j,s){
   const opts=workers.map(w=>`<option value="${w.id}" ${s.workerId===w.id?"selected":""}>${esc(w.name)}${w.skill?` — ${esc(w.skill)}`:""}</option>`).join("");
   return `<select class="stage-worker" data-action="assign-stage" data-id="${j.id}" data-sid="${s.id}">
-    <option value="">${workers.length?"— Assign worker —":"Add workers first"}</option>${opts}</select>`;
+    <option value="">${workers.length?"— Assign worker (whole stage) —":"Add workers first"}</option>${opts}</select>`;
 }
-/* interactive steps (with sub-steps) */
+function effWorker(s,p){ return (p&&p.workerId)|| (s&&s.workerId) || ""; }
+function stepWorkerSelect(j,s,p){
+  if(!workers.length) return "";
+  const opts=workers.map(w=>`<option value="${w.id}" ${p.workerId===w.id?"selected":""}>${esc(w.name)}</option>`).join("");
+  const stageW=s.workerId?esc(workerName(s.workerId)):"unassigned";
+  return `<select class="step-worker" data-action="assign-step-worker" data-id="${j.id}" data-sid="${s.id}" data-pid="${p.id}">
+    <option value="">Same as stage (${stageW})</option>${opts}</select>`;
+}
+/* interactive steps (with sub-steps + optional per-task worker) */
 function stepsInteractive(j,s){
   let html=`<div class="psteps">`;
   s.steps.forEach(p=>{
+    html+=`<div class="step-wrap">`;
     if(stepHasSubs(p)){
       const dn=p.subs.filter(x=>x.done).length, done=dn===p.subs.length;
       html+=`<div class="step-group ${done?"done":""}">
@@ -861,6 +880,8 @@ function stepsInteractive(j,s){
     } else {
       html+=`<button class="pstep ${p.done?"on":""}" data-action="toggle-step" data-id="${j.id}" data-sid="${s.id}" data-pid="${p.id}"><span class="box">${p.done?ic.check:""}</span><span class="plabel">${esc(p.name)}</span></button>`;
     }
+    html+=stepWorkerSelect(j,s,p);
+    html+=`</div>`;
   });
   html+=`</div><button class="linkbtn" data-action="job-step-edit" data-id="${j.id}" data-sid="${s.id}">${ic.pen} Edit steps &amp; sub-steps</button>`;
   return html;
@@ -1191,7 +1212,7 @@ function stepNamesForNewStage(st){
 }
 function newStagesFromTemplate(){
   return settings.stages.map(st=>({ id:uid(), name:st.name, workerId:"", done:false, qtyDone:0, startedAt:null, doneAt:null,
-    steps:stepNamesForNewStage(st).map(p=>({ id:uid(), name:p.name, done:false, doneAt:null,
+    steps:stepNamesForNewStage(st).map(p=>({ id:uid(), name:p.name, workerId:"", done:false, doneAt:null,
       subs:(p.subs||[]).map(n=>({id:uid(),name:n,done:false,doneAt:null})) })) }));
 }
 async function saveJob(id){
@@ -1212,6 +1233,11 @@ async function assignStage(jobId,sid,workerId){
   const j=jobs.find(x=>x.id===jobId); if(!j)return;
   const s=j.stages.find(s=>s.id===sid); if(!s)return;
   s.workerId=workerId; await saveJobs(); jobDetail(jobId);
+}
+async function assignStepWorker(jobId,sid,pid,workerId){
+  const j=jobs.find(x=>x.id===jobId); if(!j)return;
+  const s=j.stages.find(s=>s.id===sid), p=s&&s.steps.find(p=>p.id===pid); if(!p)return;
+  p.workerId=workerId; await saveJobs(); jobDetail(jobId);
 }
 async function setStageQty(jobId,sid,val){
   const j=jobs.find(x=>x.id===jobId); if(!j)return;
@@ -1445,6 +1471,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("change",e=>{
   if(e.target.classList.contains("stage-worker")) assignStage(e.target.dataset.id,e.target.dataset.sid,e.target.value);
+  else if(e.target.classList.contains("step-worker")) assignStepWorker(e.target.dataset.id,e.target.dataset.sid,e.target.dataset.pid,e.target.value);
   else if(e.target.id==="s_stageName") stageRename();
   else if(e.target.id==="t_stepName") tstepRename();
 });
@@ -1482,7 +1509,7 @@ function migrateJobs(){
           const t=settings.stages.find(t=>t.name===s.name);
           s.steps=(t&&t.steps.length)?t.steps.map(p=>({id:uid(),name:p.name,done:!!s.done,doneAt:null,subs:(p.subs||[]).map(n=>({id:uid(),name:n,done:!!s.done,doneAt:null}))})):[];
         } else {
-          s.steps.forEach(p=>{ if(!p.id)p.id=uid(); if(p.done==null)p.done=false; if(p.doneAt===undefined)p.doneAt=null;
+          s.steps.forEach(p=>{ if(!p.id)p.id=uid(); if(p.workerId==null)p.workerId=""; if(p.done==null)p.done=false; if(p.doneAt===undefined)p.doneAt=null;
             if(!Array.isArray(p.subs))p.subs=[]; p.subs.forEach(x=>{ if(!x.id)x.id=uid(); if(x.done==null)x.done=false; if(x.doneAt===undefined)x.doneAt=null; }); });
         }
       });

@@ -58,6 +58,22 @@
   .cloud-card .cc-btn{margin-top:14px;width:100%;padding:13px;border-radius:12px;background:var(--amber);color:#16191D;font-weight:800;font-size:14.5px;}
   .cloud-card .cc-count{margin-top:12px;font-size:13px;color:#fff;background:rgba(255,255,255,.08);border-radius:10px;padding:9px 12px;}
   .cloud-card .cc-count b{color:var(--amber);font-size:15px;}
+  .proj-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;cursor:pointer;}
+  .proj-card:active{transform:scale(.995);}
+  .proj-card .pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+  .proj-card .pc-meta{font-size:12.5px;color:var(--steel-2);margin-top:8px;}
+  .proj-card .pbar{margin-top:10px;}
+  .linkback{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--steel);background:var(--concrete);border-radius:8px;padding:6px 11px;margin-bottom:12px;}
+  .linkback:active{filter:brightness(.96);}
+  .xlabel{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#176B3C;opacity:.8;margin-bottom:7px;}
+  .xitem{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #C5E6D2;border-radius:9px;padding:8px 12px;margin-bottom:6px;font-size:14px;}
+  .xitem b{font-weight:800;}
+  .xitem .xdel{width:26px;height:26px;border-radius:7px;background:var(--concrete);color:var(--steel);font-size:13px;}
+  .xadd{display:flex;gap:7px;margin-top:4px;}
+  .xadd input{flex:1;min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;}
+  .xadd .xqty{flex:0 0 64px;}
+  .xadd .xaddbtn{flex:0 0 46px;background:#176B3C;color:#fff;border-radius:10px;display:grid;place-items:center;}
+  .xadd .xaddbtn:active{filter:brightness(.95);}
   .cloud-card .cc-btn:active{filter:brightness(.95);}
 
   .section-h{display:flex;align-items:center;justify-content:space-between;margin:24px 2px 12px;}
@@ -341,9 +357,9 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     <span class="nl">Overview</span>
   </button>
-  <button data-action="tab" data-tab="jobs" id="tab-jobs">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4M20 7l-2 12a2 2 0 0 1-2 1.7H8a2 2 0 0 1-2-1.7L4 7M9 7V5a3 3 0 0 1 6 0v2"/></svg>
-    <span class="nl">Jobs</span>
+  <button data-action="tab" data-tab="projects" id="tab-projects">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="nl">Projects</span>
   </button>
   <button data-action="tab" data-tab="team" id="tab-team">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>
@@ -377,7 +393,7 @@
 
 <script>
 "use strict";
-const APP_VERSION="2026-06-23.8";
+const APP_VERSION="2026-06-23.9";
 /* Cloud Sync interest — set your WhatsApp number (international, e.g. 923001234567) to receive interest messages. Leave empty to just show a thank-you. */
 const CLOUD_WHATSAPP="923018427020";
 const CLOUD_PRICE="$2/month";
@@ -413,7 +429,7 @@ function defaultStages(){
 }
 
 /* ===== State ===== */
-let workers=[], jobs=[];
+let workers=[], jobs=[], projects=[];
 let settings={ factory:"My Factory", stages:defaultStages() };
 let activeTab="dashboard", jobFilter="all";
 let editStageIdx=null, editStepIdx=null;       // template editors
@@ -532,7 +548,9 @@ const ic={
   trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
   share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13M8 6l4-4 4 4"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7"/></svg>',
   refresh:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>',
-  cloud:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6-1.5A4 4 0 0 0 6.5 19Z"/><path d="M8 16l2 2 4-4"/></svg>'
+  cloud:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6-1.5A4 4 0 0 0 6.5 19Z"/><path d="M8 16l2 2 4-4"/></svg>',
+  plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  folder:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
 };
 
 /* ===== Dashboard ===== */
@@ -690,6 +708,62 @@ function renderJobs(){
     <div class="chips">${filters.map(([k,l])=>`<button class="chip ${jobFilter===k?"on":""}" data-action="filter" data-f="${k}">${l}</button>`).join("")}</div>
     ${list.length?list.map(jobCard).join(""):emptyState("jobs")}`;
 }
+/* ===== Projects ===== */
+function projectJobs(pid){ return jobs.filter(j=>j.projectId===pid); }
+function projectCard(p){
+  const pj=projectJobs(p.id);
+  const total=pj.length, delivered=pj.filter(j=>jobStatus(j)==="delivered").length, ready=pj.filter(j=>jobStatus(j)==="completed").length;
+  const pct=total?Math.round(pj.reduce((a,j)=>a+progressPct(j),0)/total):0;
+  return `<div class="proj-card" data-action="open-project" data-id="${p.id}">
+    <div class="pc-top"><h3 class="job-title">${esc(p.name)}</h3>${p.due?`<span class="chiplet">${ic.cal} ${esc(fmtDate(p.due))}</span>`:""}</div>
+    <div class="job-client">${ic.pin}<span>${esc(p.client||"No client")}${p.site?` · ${esc(p.site)}`:""}</span></div>
+    <div class="pc-meta">${total} job${total!==1?"s":""}${total?` · ${delivered} delivered${ready?` · ${ready} ready`:""}`:" · add jobs"}</div>
+    ${total?`<div class="pbar"><span style="width:${pct}%"></span></div>`:""}
+  </div>`;
+}
+function renderProjects(){
+  const list=projects.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const ungrouped=jobs.filter(j=>!j.projectId).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  let html=`<div class="view-title">Projects</div>`;
+  if(!list.length && !ungrouped.length){
+    html+=`<div class="empty"><div class="e-ico">${ic.folder}</div><h3>No projects yet</h3><p>Tap "New project" to create one, then add the jobs it will include.</p></div>`;
+  } else {
+    html+= list.length? list.map(projectCard).join("") : `<div class="hint" style="margin-bottom:8px;">No projects yet. Tap "New project" to start.</div>`;
+    if(ungrouped.length){
+      html+=`<div class="section-h" style="margin-top:20px;"><h2>Ungrouped jobs</h2><span class="count">${ungrouped.length}</span></div>
+        <div class="hint" style="margin-bottom:10px;">Jobs not inside any project. Open a job and pick a project to group it.</div>
+        ${ungrouped.map(jobCard).join("")}`;
+    }
+  }
+  view.innerHTML=html;
+}
+function projectDetail(id){
+  const p=projects.find(x=>x.id===id); if(!p)return;
+  const pj=projectJobs(p.id).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const total=pj.length, delivered=pj.filter(j=>jobStatus(j)==="delivered").length;
+  const pct=total?Math.round(pj.reduce((a,j)=>a+progressPct(j),0)/total):0;
+  openSheet(p.name);
+  $("#sheetBody").innerHTML=`
+    <div class="meta-line">${ic.pin} ${esc(p.client||"No client")}${p.site?` · ${esc(p.site)}`:""}${p.due?`<br/>${ic.cal} Due ${esc(fmtDate(p.due))}`:""}${p.notes?`<br/><span style="color:var(--ink-2)">${esc(p.notes)}</span>`:""}</div>
+    <div class="sub-h">Jobs — ${total?`${delivered}/${total} delivered · ${pct}%`:"none yet"}</div>
+    ${pj.length? pj.map(jobCard).join("") : `<div class="hint" style="margin-bottom:8px;">No jobs in this project yet. Add the first one below.</div>`}
+    <button class="btn btn-amber" data-action="add-job-to-project" data-id="${p.id}" style="margin-top:4px;">${ic.plus} Add job to this project</button>
+    <div class="btn-row"><button class="btn btn-primary" data-action="edit-project" data-id="${p.id}">Edit project</button>
+      <button class="btn btn-ghost" data-action="delete-project" data-id="${p.id}">Delete</button></div>`;
+}
+function projectForm(p){
+  const e=p||{}; openSheet(p?"Edit project":"New project");
+  $("#sheetBody").innerHTML=`
+    <div class="field"><label>Project name</label><input id="p_name" placeholder="e.g. Hotel ABC furniture order" value="${esc(e.name||"")}" /></div>
+    <div class="two">
+      <div class="field"><label>Client</label><input id="p_client" placeholder="Client name" value="${esc(e.client||"")}" /></div>
+      <div class="field"><label>Site</label><input id="p_site" placeholder="City / address" value="${esc(e.site||"")}" /></div>
+    </div>
+    <div class="field"><label>Due date (optional)</label><input id="p_due" type="date" value="${esc(e.due||"")}" /></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="p_notes" placeholder="What this project includes...">${esc(e.notes||"")}</textarea></div>
+    <button class="btn btn-amber" data-action="save-project" data-id="${e.id||""}">${p?"Save changes":"Create project"}</button>
+    <div class="hint" style="margin-top:10px;">${p?"":"Next: open the project and add the jobs it will include."}</div>`;
+}
 
 /* ===== Team / ranking ===== */
 function workerStats(){
@@ -829,12 +903,15 @@ function workerForm(w){
 }
 
 /* Job form */
-function jobForm(j){
+function jobForm(j,presetProjectId){
   const e=j||{}; openSheet(j?"Edit job":"New job");
+  const curProj = e.projectId || presetProjectId || "";
+  const projOpts = projects.map(p=>`<option value="${p.id}" ${curProj===p.id?"selected":""}>${esc(p.name)}</option>`).join("");
   const src = j ? (e.stages||[]) : settings.stages;
   const chips = src.map((s,i)=>`<span class="sc"><b>${i+1}</b>${esc(s.name)}${(s.steps&&s.steps.length)?` <i>· ${s.steps.length}</i>`:""}</span>`).join("");
   $("#sheetBody").innerHTML=`
     <div class="field"><label>Job / product</label><input id="f_title" placeholder="e.g. 4 wooden doors" value="${esc(e.title||"")}" /></div>
+    <div class="field"><label>Project</label><select id="f_project"><option value="">No project</option>${projOpts}</select></div>
     <div class="two">
       <div class="field"><label>Client</label><input id="f_client" placeholder="Client name" value="${esc(e.client||"")}" /></div>
       <div class="field"><label>Delivery site</label><input id="f_site" placeholder="City / address" value="${esc(e.site||"")}" /></div>
@@ -911,14 +988,16 @@ function jobDetail(id){
   const st=jobStatus(j), ci=currentStageIndex(j);
   openSheet(j.title);
   const days=jobDaysText(j);
-  let body=`<div class="meta-line">
+  const proj=j.projectId?projects.find(p=>p.id===j.projectId):null;
+  let body=`${proj?`<button class="linkback" data-action="open-project" data-id="${proj.id}">← ${esc(proj.name)}</button>`:""}
+    <div class="meta-line">
       ${ic.pin} ${esc(j.client||"No client")}${j.site?` · ${esc(j.site)}`:""}<br/>
       ${ic.cal} Start ${esc(fmtDate(j.start))}${j.due?` · Due ${esc(fmtDate(j.due))}`:""}
       ${j.notes?`<br/><span style="color:var(--ink-2)">${esc(j.notes)}</span>`:""}
     </div>
     ${days?`<div class="days-pill">${days}</div>`:""}`;
   if(st==="delivered"){
-    body+=`<div class="delivered-note"><strong>${ic.truck} Delivered to client</strong><br/>Date: ${esc(fmtDate(j.deliveredOn))}${j.deliveredNote?`<br/>Note: ${esc(j.deliveredNote)}`:""}</div>
+    body+=`<div class="delivered-note"><strong>${ic.truck} Delivered to client</strong><br/>Date: ${esc(fmtDate(j.deliveredOn))}${j.deliveredNote?`<br/>Note: ${esc(j.deliveredNote)}`:""}${(j.extraItems&&j.extraItems.length)?`<br/>Open items: ${j.extraItems.map(it=>esc(it.name)+(it.qty?` ×${it.qty}`:"")).join(", ")}`:""}</div>
       <div class="sub-h">Stages</div><div class="pipeline">${pipelineHTML(j,-1,true)}</div>
       <div class="btn-row"><button class="btn btn-primary" data-action="edit-job" data-id="${j.id}">Edit job</button>
       <button class="btn btn-ghost" data-action="reopen-job" data-id="${j.id}">Undo delivery</button></div>`;
@@ -933,12 +1012,18 @@ function jobDetail(id){
     }
     body+=`<div class="sub-h">${ic.layers} Stages — ${isQtyJob(j)?`${jobQty(j)} units · `:""}${stagesDoneCount(j)}/${(j.stages||[]).length} stages done · ${progressPct(j)}%</div>
       <div class="pipeline">${pipelineHTML(j,ci,false)}</div>`;
-    if(allDone(j)){
-      body+=`<div class="deliver-box"><div class="dh">${ic.truck} Record delivery</div>
-        <div class="field"><label>Delivered on</label><input id="d_date" type="date" value="${todayISO()}" /></div>
-        <div class="field"><label>Delivery note (optional)</label><input id="d_note" placeholder="Received by, vehicle, GP no..." /></div>
-        <button class="btn btn-green" data-action="deliver-job" data-id="${j.id}">Mark as delivered</button></div>`;
-    } else body+=`<div class="hint" style="text-align:center;margin:2px 0 14px;">Finish every stage to record the delivery.</div>`;
+    const xitems=(j.extraItems||[]);
+    const xlist = xitems.length? xitems.map(it=>`<div class="xitem"><span>${esc(it.name)}${it.qty?` <b>×${it.qty}</b>`:""}</span><button class="xdel" data-action="xitem-del" data-id="${j.id}" data-xid="${it.id}">✕</button></div>`).join("") : `<div class="hint" style="margin:2px 0 8px;">None added. Use this for old / untracked items being delivered.</div>`;
+    body+=`<div class="deliver-box">
+      <div class="dh">${ic.truck} ${allDone(j)?"Record delivery":"Delivery"}</div>
+      <div class="xlabel">Open / untracked items</div>
+      <div id="extraList">${xlist}</div>
+      <div class="xadd"><input id="x_name" placeholder="Item name (e.g. old table)" /><input id="x_qty" class="xqty" type="number" min="1" inputmode="numeric" placeholder="Qty" /><button class="xaddbtn" data-action="xitem-add" data-id="${j.id}">${ic.plus}</button></div>
+      <div class="field" style="margin-top:12px;"><label>Delivered on</label><input id="d_date" type="date" value="${todayISO()}" /></div>
+      <div class="field"><label>Delivery note (optional)</label><input id="d_note" placeholder="Received by, vehicle, GP no..." /></div>
+      ${allDone(j)?"":`<div class="hint" style="margin:2px 0 10px;">Note: some stages are not finished. You can still deliver (for old / open items).</div>`}
+      <button class="btn btn-green" data-action="deliver-job" data-id="${j.id}">Mark as delivered</button>
+    </div>`;
     body+=`<div class="btn-row"><button class="btn btn-primary" data-action="edit-job" data-id="${j.id}">Edit job</button>
       <button class="btn btn-ghost" data-action="delete-job" data-id="${j.id}">Delete</button></div>`;
   }
@@ -1173,6 +1258,7 @@ function homeHelp(){
 /* ===== Mutations ===== */
 async function saveWorkers(){ await Store.set("workers",workers); }
 async function saveJobs(){ await Store.set("jobs",jobs); }
+async function saveProjects(){ await Store.set("projects",projects); }
 async function saveSettingsStore(){ await Store.set("settings",settings); }
 
 async function saveWorker(id){
@@ -1218,16 +1304,32 @@ function newStagesFromTemplate(){
 async function saveJob(id){
   const title=$("#f_title").value.trim(); if(!title){toast("Job name is required");return;}
   const qv=parseInt($("#f_qty").value,10); const qty=(qv&&qv>1)?qv:1;
-  const data={ title, client:$("#f_client").value.trim(), site:$("#f_site").value.trim(), qty,
+  const projectId = $("#f_project")?$("#f_project").value:"";
+  const data={ title, projectId, client:$("#f_client").value.trim(), site:$("#f_site").value.trim(), qty,
     start:$("#f_start").value||todayISO(), due:$("#f_due").value, notes:$("#f_notes").value.trim() };
   if(id){ const j=jobs.find(x=>x.id===id); Object.assign(j,data);
-    (j.stages||[]).forEach(s=>{ if(s.qtyDone==null)s.qtyDone=0; if(s.qtyDone>qty)s.qtyDone=qty; }); recompute(j); }
-  else { const j={ id:uid(), ...data, stages:newStagesFromTemplate(), status:"active", pauses:[], createdAt:Date.now() }; recompute(j); jobs.push(j); }
-  await saveJobs(); closeSheet(); render(); toast(id?"Job updated":"Job created");
+    (j.stages||[]).forEach(s=>{ if(s.qtyDone==null)s.qtyDone=0; if(s.qtyDone>qty)s.qtyDone=qty; }); recompute(j);
+    await saveJobs(); closeSheet(); render(); toast("Job updated"); }
+  else { const j={ id:uid(), ...data, stages:newStagesFromTemplate(), status:"active", pauses:[], extraItems:[], createdAt:Date.now() }; recompute(j); jobs.push(j);
+    await saveJobs(); if(projectId){ render(); projectDetail(projectId); } else { closeSheet(); render(); } toast("Job created"); }
 }
 async function deleteJob(id){
   if(!(await uiConfirm("Delete this job permanently?","Delete","Cancel")))return;
   jobs=jobs.filter(j=>j.id!==id); await saveJobs(); closeSheet(); render(); toast("Job deleted");
+}
+async function saveProject(id){
+  const name=$("#p_name").value.trim(); if(!name){toast("Project name is required");return;}
+  const data={ name, client:$("#p_client").value.trim(), site:$("#p_site").value.trim(), due:$("#p_due").value, notes:$("#p_notes").value.trim() };
+  if(id){ Object.assign(projects.find(x=>x.id===id),data); await saveProjects(); closeSheet(); render(); toast("Project updated"); }
+  else { const p={ id:uid(), ...data, createdAt:Date.now() }; projects.push(p); await saveProjects(); render(); projectDetail(p.id); toast("Project created — add its jobs"); }
+}
+async function deleteProject(id){
+  const n=projectJobs(id).length;
+  const msg=n?`Delete this project? Its ${n} job(s) will become ungrouped (not deleted).`:"Delete this project?";
+  if(!(await uiConfirm(msg,"Delete","Cancel")))return;
+  jobs.forEach(j=>{ if(j.projectId===id)j.projectId=""; });
+  projects=projects.filter(p=>p.id!==id);
+  await saveProjects(); await saveJobs(); closeSheet(); render(); toast("Project deleted");
 }
 async function assignStage(jobId,sid,workerId){
   const j=jobs.find(x=>x.id===jobId); if(!j)return;
@@ -1274,9 +1376,23 @@ async function reopenStage(jobId,sid){
 }
 async function deliverJob(id){
   const j=jobs.find(x=>x.id===id); if(!j)return;
+  if(!allDone(j)){ if(!(await uiConfirm("Some stages are not finished. Deliver anyway?","Deliver","Cancel")))return; }
   if(isPaused(j))j.pauses[j.pauses.length-1].to=Date.now();
   j.status="delivered"; j.deliveredOn=$("#d_date").value||todayISO(); j.deliveredNote=($("#d_note").value||"").trim();
   await saveJobs(); closeSheet(); render(); toast("Delivery recorded ✓");
+}
+async function addExtraItem(id){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  const name=($("#x_name").value||"").trim(); if(!name){toast("Item name?");return;}
+  const qv=parseInt($("#x_qty").value,10); const qty=(qv&&qv>0)?qv:0;
+  if(!Array.isArray(j.extraItems))j.extraItems=[];
+  j.extraItems.push({id:uid(),name,qty});
+  await saveJobs(); jobDetail(id);
+}
+async function delExtraItem(id,xid){
+  const j=jobs.find(x=>x.id===id); if(!j)return;
+  j.extraItems=(j.extraItems||[]).filter(x=>x.id!==xid);
+  await saveJobs(); jobDetail(id);
 }
 async function reopenJob(id){
   const j=jobs.find(x=>x.id===id); if(!j)return;
@@ -1391,12 +1507,12 @@ async function handleImport(file){
 /* ===== Tabs / render ===== */
 function render(){
   if(activeTab==="dashboard")renderDashboard();
-  else if(activeTab==="jobs")renderJobs();
+  else if(activeTab==="projects")renderProjects();
   else renderTeam();
-  ["dashboard","jobs","team"].forEach(t=>$("#tab-"+t).classList.toggle("on",t===activeTab));
+  ["dashboard","projects","team"].forEach(t=>$("#tab-"+t).classList.toggle("on",t===activeTab));
   const fab=$("#fab"),lbl=$("#fabLabel");
   if(activeTab==="team"){lbl.textContent="Add worker";fab.style.display="flex";}
-  else if(activeTab==="jobs"){lbl.textContent="New job";fab.style.display="flex";}
+  else if(activeTab==="projects"){lbl.textContent="New project";fab.style.display="flex";}
   else fab.style.display="none";
 }
 function setTab(t){ activeTab=t; render(); }
@@ -1413,7 +1529,7 @@ document.addEventListener("click",e=>{
     case "filter": jobFilter=el.dataset.f; renderJobs(); break;
     case "close": closeSheet(); break;
     case "settings": settingsForm(); break;
-    case "fab": activeTab==="team"?workerForm():jobForm(); break;
+    case "fab": activeTab==="team"?workerForm():activeTab==="projects"?projectForm():jobForm(); break;
     case "edit-worker": workerForm(workers.find(w=>w.id===id)); break;
     case "save-worker": saveWorker(id); break;
     case "delete-worker": deleteWorker(id); break;
@@ -1421,6 +1537,13 @@ document.addEventListener("click",e=>{
     case "save-job": saveJob(id); break;
     case "delete-job": deleteJob(id); break;
     case "open-job": jobDetail(id); break;
+    case "open-project": projectDetail(id); break;
+    case "edit-project": projectForm(projects.find(p=>p.id===id)); break;
+    case "save-project": saveProject(id); break;
+    case "delete-project": deleteProject(id); break;
+    case "add-job-to-project": jobForm(null, id); break;
+    case "xitem-add": addExtraItem(id); break;
+    case "xitem-del": delExtraItem(id, el.dataset.xid); break;
     case "toggle-step": toggleStep(id,el.dataset.sid,el.dataset.pid); break;
     case "toggle-sub": toggleSub(id,el.dataset.sid,el.dataset.pid,el.dataset.subid); break;
     case "mark-stage-done": markStageDone(id,el.dataset.sid); break;
@@ -1517,6 +1640,8 @@ function migrateJobs(){
     if(j.status==="completed")j.status="active";
     if(!Array.isArray(j.pauses))j.pauses=[];
     if(j.qty==null)j.qty=1;
+    if(j.projectId==null)j.projectId="";
+    if(!Array.isArray(j.extraItems))j.extraItems=[];
     (j.stages||[]).forEach(s=>{ if(s.qtyDone==null)s.qtyDone=0; });
     recompute(j);
   });
@@ -1524,9 +1649,10 @@ function migrateJobs(){
 (async function init(){
   workers=await Store.get("workers",[]);
   jobs=await Store.get("jobs",[]);
+  projects=await Store.get("projects",[]);
   settings=await Store.get("settings",{factory:"My Factory",stages:defaultStages()});
   migrateSettings(); migrateJobs();
-  await saveSettingsStore(); await saveJobs();
+  await saveSettingsStore(); await saveJobs(); await saveProjects();
   $("#brandName").value=settings.factory||"My Factory";
   render();
 })();
